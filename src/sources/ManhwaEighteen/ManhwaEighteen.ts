@@ -1,14 +1,4 @@
-import { Source } from '../Source'
-import { Manga, MangaStatus } from '../../models/Manga/Manga'
-import { Chapter } from '../../models/Chapter/Chapter'
-import { MangaTile } from '../../models/MangaTile/MangaTile'
-import { SearchRequest } from '../../models/SearchRequest/SearchRequest'
-import { Request } from '../../models/RequestObject/RequestObject'
-import { ChapterDetails } from '../../models/ChapterDetails/ChapterDetails'
-import { Tag, TagSection } from '../../models/TagSection/TagSection'
-import { HomeSection, HomeSectionRequest } from '../../models/HomeSection/HomeSection'
-import { LanguageCode } from '../../models/Languages/Languages'
-
+import { Source, Manga, MangaStatus, Chapter, ChapterDetails, HomeSectionRequest, HomeSection, MangaTile, SearchRequest, LanguageCode, TagSection, Request } from "paperback-extensions-common"
 const ME_DOMAIN = 'https://manhwa18.com'
 
 export class ManhwaEighteen extends Source {

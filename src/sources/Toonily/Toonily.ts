@@ -1,13 +1,5 @@
-import { Source } from '../Source'
-import { Manga, MangaStatus } from '../../models/Manga/Manga'
-import { Chapter } from '../../models/Chapter/Chapter'
-import { MangaTile } from '../../models/MangaTile/MangaTile'
-import { SearchRequest } from '../../models/SearchRequest/SearchRequest'
-import { Request } from '../../models/RequestObject/RequestObject'
-import { ChapterDetails } from '../../models/ChapterDetails/ChapterDetails'
-import { LanguageCode } from '../../models/Languages/Languages'
-import { HomeSectionRequest, HomeSection } from '../../models/HomeSection/HomeSection'
-import { Tag } from '../../models/TagSection/TagSection'
+
+import { Source, Manga, MangaStatus, Tag, Chapter, ChapterDetails, HomeSectionRequest, HomeSection, MangaTile, SearchRequest, LanguageCode, Request } from "paperback-extensions-common"
 
 const TOONILY_DOMAIN = 'https://toonily.com'
 
