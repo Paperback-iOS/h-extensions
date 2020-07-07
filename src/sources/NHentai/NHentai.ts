@@ -1,4 +1,4 @@
-import { Source, Manga, Chapter, ChapterDetails, HomeSectionRequest, HomeSection, MangaTile, SearchRequest, LanguageCode, TagSection, Request } from "paperback-extensions-common"
+import { Source, SourceTag, TagType, Manga, Chapter, ChapterDetails, HomeSectionRequest, HomeSection, MangaTile, SearchRequest, LanguageCode, TagSection, Request } from "paperback-extensions-common"
 const NHENTAI_DOMAIN = 'https://nhentai.net'
 
 export class NHentai extends Source {
@@ -15,6 +15,13 @@ export class NHentai extends Source {
   get hentaiSource(): boolean { return true }
   getMangaShareUrl(mangaId: string): string | null { return `https://nhentai.net/g/${mangaId}`}
 
+  get sourceTags(): SourceTag[] {
+    let tag: SourceTag = {
+      text: '18+',
+      type: TagType.YELLOW
+    }
+    return [tag]
+  }
 
   convertLanguageToCode(language: string) {
     switch (language.toLowerCase()) {

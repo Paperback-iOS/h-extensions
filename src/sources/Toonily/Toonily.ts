@@ -1,5 +1,5 @@
 
-import { Source, Manga, MangaStatus, Tag, Chapter, ChapterDetails, HomeSectionRequest, HomeSection, MangaTile, SearchRequest, LanguageCode, Request } from "paperback-extensions-common"
+import { Source, SourceTag, TagType, Manga, MangaStatus, Tag, Chapter, ChapterDetails, HomeSectionRequest, HomeSection, MangaTile, SearchRequest, LanguageCode, Request } from "paperback-extensions-common"
 
 const TOONILY_DOMAIN = 'https://toonily.com'
 
@@ -16,6 +16,13 @@ export class Toonily extends Source {
   get icon(): string { return "logo.png" } 
   get hentaiSource(): boolean { return false }
 
+  get sourceTags(): SourceTag[] {
+    let tag: SourceTag = {
+      text: '18+',
+      type: TagType.YELLOW
+    }
+    return [tag]
+  }
 
   getMangaDetailsRequest(ids: string[]): Request[] {
     let requests: Request[] = []
