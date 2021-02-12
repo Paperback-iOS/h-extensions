@@ -18,6 +18,7 @@ jobs:
     steps:
       - name: Checkout Branch
         uses: actions/checkout@v2
+
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.1.2
         with:
@@ -28,12 +29,13 @@ jobs:
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
         id: extract_branch
 
-      - run: npm install
+      - name: Checkout existing bundles
+        uses: actions/checkout@v2
+          ref: gh-pages
+          path: bundles
 
-      - if: steps.extract_branch.outputs.branch != 'master' && steps.extract_branch.outputs.branch != 'main' 
-        run: npm run bundle -- --folder=${{ steps.extract_branch.outputs.branch }}
-      - if: steps.extract_branch.outputs.branch == 'master' || steps.extract_branch.outputs.branch == 'main' 
-        run: npm run bundle
+      - run: npm install
+      - run: npm run bundle -- --folder=${{ steps.extract_branch.outputs.branch }}
 
       - name: Deploy
         uses: s0/git-publish-subdir-action@master
