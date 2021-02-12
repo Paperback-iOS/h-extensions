@@ -1,11 +1,9 @@
 on:
   push:
     branches:
-      - master
+      - '**'
   pull_request:
       types: [closed]
-      branches:
-          - master
 
 name: Bundle and Publish Sources
 jobs:
@@ -24,9 +22,18 @@ jobs:
         uses: actions/setup-node@v2.1.2
         with:
           node-version: ${{ matrix.node-version }}
+      
+      - name: Extract branch name
+        shell: bash
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        id: extract_branch
 
       - run: npm install
-      - run: npm run bundle
+
+      - if: steps.extract_branch.outputs.branch != 'master' && steps.extract_branch.outputs.branch != 'main' 
+        run: npm run bundle --folder=${{ steps.extract_branch.outputs.branch }}
+      - if: steps.extract_branch.outputs.branch == 'master' || steps.extract_branch.outputs.branch == 'main' 
+        run: npm run bundle
 
       - name: Deploy
         uses: s0/git-publish-subdir-action@master
