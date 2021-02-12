@@ -1,10 +1,4 @@
-on:
-  push:
-    branches:
-      - '**'
-  pull_request:
-      types: [closed]
-
+on: push
 name: Bundle and Publish Sources
 jobs:
   build:
