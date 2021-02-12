@@ -32,6 +32,7 @@ jobs:
 
       - if: steps.extract_branch.outputs.branch != 'master' && steps.extract_branch.outputs.branch != 'main' 
         run: npm run bundle --folder=${{ steps.extract_branch.outputs.branch }}
+        
       - if: steps.extract_branch.outputs.branch == 'master' || steps.extract_branch.outputs.branch == 'main' 
         run: npm run bundle
 
