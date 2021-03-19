@@ -1,5 +1,5 @@
-import { Source, Manga, Chapter, ChapterDetails, HomeSection, SearchRequest, PagedResults, SourceInfo, TagType } from "paperback-extensions-common";
-import { isLastPage, parseChapterDetails, parseChapters, parseHomeSections, parseMangaDetails, parseSearchResults } from "./MyReadingMangaParser";
+import { Source, Manga, Chapter, ChapterDetails, HomeSection, SearchRequest, PagedResults, SourceInfo, TagType, MangaUpdates } from "paperback-extensions-common";
+import { isLastPage, parseChapterDetails, parseChapters, parseHomeSections, parseMangaDetails, parseSearchResults, UpdatedManga, parseUpdatedManga } from "./MyReadingMangaParser";
 
 const MRM_DOMAIN = "https://myreadingmanga.info";
 
@@ -12,7 +12,11 @@ export const MyReadingMangaInfo: SourceInfo = {
 	description: "Extension that pulls manga from MyReadingManga",
 	hentaiSource: true,
 	websiteBaseURL: MRM_DOMAIN,
-	sourceTags: [
+    sourceTags: [
+        {
+            text: "Notifications",
+            type: TagType.GREEN
+        },
 		{
 			text: "18+",
 			type: TagType.YELLOW,
@@ -233,6 +237,31 @@ export class MyReadingManga extends Source {
 		});
 	}
 
+	async filterUpdatedManga(mangaUpdatesFoundCallback: (updates: MangaUpdates) => void, time: Date, ids: string[]): Promise<void> {
+		let page = 1;
+		let updatedManga: UpdatedManga = {
+			ids: [],
+			loadMore: true,
+		};
+		while (updatedManga.loadMore) {
+			const request = createRequestObject({
+				url: `${MRM_DOMAIN}/search/?wpsolr_sort=sort_by_date_desc&wpsolr_page=${page++}`,
+				method: "GET",
+				headers: this.constructHeaders({}, `/search/?wpsolr_sort=sort_by_date_desc&wpsolr_page=${page++}`),
+			});
+
+			const response = await this.requestManager.schedule(request, 1);
+			const $ = this.cheerio.load(response.data);
+
+			updatedManga = parseUpdatedManga($, time, ids);
+			if (updatedManga.ids.length > 0) {
+				mangaUpdatesFoundCallback({
+					ids: updatedManga.ids,
+				});
+			}
+		}
+    }
+    
 	cloudflareError(status: any) {
 		if (status == 503) {
 			throw new Error("CLOUDFLARE BYPASS ERROR: Please go to Settings > Sources > MyReadingManga and press Cloudflare Bypass");
