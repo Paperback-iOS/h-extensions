@@ -1,7 +1,8 @@
 {
-  "name": "mangadex-work",
+  "name": "h-extensions",
   "version": "1.0.0",
-  "description": "",
+  "repositoryName": "[Promises] H-Extensions",
+  "description": "Official repository for 18+ sources",
   "main": "index.js",
   "scripts": {
     "start": "tsc && node dist/api.js",
