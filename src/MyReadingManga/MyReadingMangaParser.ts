@@ -336,33 +336,6 @@ export const parseSearchResults = ($: CheerioStatic): MangaTile[] => {
 	return mangaTiles;
 };
 
-// ! Not tested yet
-// export interface UpdatedManga {
-// 	ids: string[];
-// 	loadMore: boolean;
-// }
-
-// export const parseUpdatedManga = ($: CheerioStatic, time: Date, ids: string[]): UpdatedManga => {
-// 	const manga: string[] = [];
-// 	let loadMore = true;
-// 	const container: Cheerio = $("div.wdm_results");
-// 	for (const element of $(".results-by-facets > div", container).toArray()) {
-// 		const id: string = ($("a", element).attr("href") ?? "").split("/").reverse()[1] ?? "";
-// 		const mangaTime: string[] =
-// 			$(".pdate")
-// 				.text()
-// 				.match(/[0-9]{2}[-|\/]{1}[0-3]{1}[0-9]{1}[-|\/]{1}[0-9]{4}/g) ?? [];
-// 		if (mangaTime.length > 0 && new Date(Date.parse(mangaTime[0])) > time) {
-// 			ids.includes(id) ? manga.push(id) : (loadMore = false);
-// 		}
-// 	}
-
-// 	return {
-// 		ids: manga,
-// 		loadMore,
-// 	};
-// };
-
 export const isLastPage = ($: CheerioSelector, isSearchPage: boolean): boolean => {
 	if (isSearchPage) {
 		const container: Cheerio = $("#pagination-flickr");
