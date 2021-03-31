@@ -18,6 +18,10 @@ export const MyReadingMangaInfo: SourceInfo = {
             type: TagType.YELLOW,
         },
         {
+            text: "Yaoi",
+            type: TagType.YELLOW,
+        },
+        {
             text: "Cloudflare",
             type: TagType.RED,
         },
