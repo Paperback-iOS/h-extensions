@@ -149,14 +149,33 @@ export class MangaOwl extends Source {
     }
 
     async getViewMoreItems(homepageSectionId: string, metadata: any): Promise<PagedResults> {
+        if (typeof metadata !== "object"){
+            metadata = {page: metadata}
+        }
+        let page = 1;
+        if (metadata.page){
+            page = metadata.page;
+        }
+        if (page === null){
+            return createPagedResults({results: []});
+        }
         const options: Request = createRequestObject({
-            url: `${BASE}/${homepageSectionId}`,
+            url: `${BASE}/${homepageSectionId}/${page}`,
             method: 'GET'
         });
         let response = await this.requestManager.schedule(options, 1);
         let $ = this.cheerio.load(response.data);
+        let newPage: number | null = page + 1;
+        const tiles: MangaTile[] = this.parser.parseTileSection($, "flexslider");
+        if (tiles.length === 0){
+            newPage = null;
+        }
+        metadata.page = newPage
+        if (newPage === null){
+            return createPagedResults({results: []});
+        }
         return createPagedResults({
-            results: this.parser.parseTileSection($, "flexslider")
+            results: tiles
         });
     }
 
@@ -196,7 +215,17 @@ export class MangaOwl extends Source {
     }
 
     async searchRequest(query: SearchRequest, metadata: any): Promise<PagedResults> {
-        let url = `${BASE}/search/1?&search_field=12&sort=4&completed=2&genres=`
+        if (typeof metadata !== "object"){
+            metadata = {page: metadata}
+        }
+        let page = 1;
+        if (metadata.page){
+            page = metadata.page;
+        }
+        if (page === null){
+            return createPagedResults({results: []});
+        }
+        let url = `${BASE}/search/${page}?&search_field=12&sort=4&completed=2&genres=`
         if (query.title) {
             url += `&search=${query.title}`
         }
@@ -206,8 +235,17 @@ export class MangaOwl extends Source {
         });
         let response = await this.requestManager.schedule(options, 1);
         let $ = this.cheerio.load(response.data);
+        let newPage: number | null = page + 1;
+        const tiles: MangaTile[] = this.parser.parseTileSection($, "flexslider");
+        if (tiles.length === 0){
+            newPage = null;
+        }
+        metadata.page = newPage
+        if (newPage === null){
+            return createPagedResults({results: []});
+        }
         return createPagedResults({
-            results: this.parser.parseTileSection($, "flexslider")
+            results: tiles
         });
     }
 
