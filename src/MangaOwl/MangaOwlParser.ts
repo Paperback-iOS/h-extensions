@@ -202,18 +202,16 @@ export class MangaOwlParser {
                             const dateObj = new Date(Date.UTC(year, month, day, hour, minute));
                             if (dateObj > dateTime){
                                 ids.push(tile.id);
-                            } else {
-                                if (ids.length !== 0){
-                                    return  ids;
-                                } else {
-                                    return null;
-                                }
                             }
                         }
                     }
                 }
             }
         }
-        return ids;
+        if (ids.length !== 0){
+            return  ids;
+        } else {
+            return null;
+        }
     }
 }

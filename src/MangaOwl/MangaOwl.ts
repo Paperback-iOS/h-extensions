@@ -261,9 +261,11 @@ export class MangaOwl extends Source {
                     ids.splice(ids.indexOf(id), 1);
                 }
             }
+            if (actualIds.length > 0){
             mangaUpdatesFoundCallback(createMangaUpdates({
                 ids: actualIds
             }))
+            }
             const options: Request = createRequestObject({
                 url: `${BASE}/lastest/${page}`,
                 method: 'GET',
