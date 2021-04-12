@@ -78,9 +78,10 @@ describe('MangaOwl Tests', function () {
     })
 
     it("Testing view more", async () => {
-        let data = await wrapper.getViewMoreItems(source, 'lastest', {page: null})
+        let data = await wrapper.getViewMoreItems(source, 'lastest', {})
         expect(data, "No server response").to.exist;
         expect(data, "Empty server response").to.not.be.empty;
+        expect((data || [[]])[0], "Empty server response").to.not.be.empty;
      })
 
 

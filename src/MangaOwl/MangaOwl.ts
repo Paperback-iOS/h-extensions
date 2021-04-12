@@ -25,7 +25,7 @@ interface JapaneseMangaObj {
 
 export const MangaOwlInfo: SourceInfo = {
     icon: "icon.png",
-    version: "1.2.7",
+    version: "1.2.9",
     name: "MangaOwl",
     author: "PythonCoderAS",
     authorWebsite: "https://github.com/PythonCoderAS",
@@ -149,8 +149,10 @@ export class MangaOwl extends Source {
     }
 
     async getViewMoreItems(homepageSectionId: string, metadata: any): Promise<PagedResults> {
-        if (typeof metadata !== "object"){
-            metadata = {page: metadata}
+        if (typeof metadata !== "object" && metadata !== null){
+            metadata = {page: metadata};
+        } else if (metadata === null){
+            metadata = {};
         }
         let page = 1;
         if (metadata.page){
@@ -215,8 +217,10 @@ export class MangaOwl extends Source {
     }
 
     async searchRequest(query: SearchRequest, metadata: any): Promise<PagedResults> {
-        if (typeof metadata !== "object"){
-            metadata = {page: metadata}
+        if (typeof metadata !== "object" && metadata !== null){
+            metadata = {page: metadata};
+        } else if (metadata === null){
+            metadata = {};
         }
         let page = 1;
         if (metadata.page){
