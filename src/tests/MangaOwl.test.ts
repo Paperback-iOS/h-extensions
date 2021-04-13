@@ -78,11 +78,19 @@ describe('MangaOwl Tests', function () {
     })
 
     it("Testing view more", async () => {
-        let data = await wrapper.getViewMoreItems(source, 'lastest', {})
-        expect(data, "No server response").to.exist;
-        expect(data, "Empty server response").to.not.be.empty;
-        expect((data || [[]])[0], "Empty server response").to.not.be.empty;
-     })
+        const results = await wrapper.getViewMoreItems(source, "lastest", {}, 1);
+        const resultsWithPagedData = await wrapper.getViewMoreItems(source, "lastest", {}, 3);
+
+        expect(results, "No results for page 1 for this section").to.exist;
+        expect(resultsWithPagedData, "No results for page 3 for this section").to.exist;
+        expect(resultsWithPagedData, "Page 1 and page 1+2+3 and the same").to.not.eql(results);
+
+        const data = results![0];
+
+        expect(data.id, "No ID present").to.exist;
+        expect(data.image, "No image present").to.exist;
+        expect(data.title.text, "No title present").to.exist;
+    })
 
 
     it("Testing Notifications", async () => {
