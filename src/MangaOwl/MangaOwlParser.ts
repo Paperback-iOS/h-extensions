@@ -174,7 +174,7 @@ export class MangaOwlParser {
             mangaObj.author = parts[1].replace(/\s{2,}/, " ");
         }
         if (parts[2]) {
-            mangaObj.artist = parts[2]/replace(/\s{2,}/, " ");
+            mangaObj.artist = parts[2].replace(/\s{2,}/, " ");
         }
         if (parts[3]) {
             mangaObj.views = Number((parts[3] || "0").replace(",", ""));
