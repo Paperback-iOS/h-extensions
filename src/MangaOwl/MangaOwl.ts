@@ -25,7 +25,7 @@ interface JapaneseMangaObj {
 
 export const MangaOwlInfo: SourceInfo = {
     icon: "icon.png",
-    version: "1.3.0",
+    version: "1.3.2",
     name: "MangaOwl",
     author: "PythonCoderAS",
     authorWebsite: "https://github.com/PythonCoderAS",
@@ -103,7 +103,7 @@ export class MangaOwl extends Source {
         if (apiURL){
             sectionCallback(createHomeSection({
                 id: "updated_raw_manga",
-                items: await this.getJapaneseManga(sectionCallback, apiURL),
+                items: await this.getJapaneseManga(apiURL),
                 title: "Japanese Manga",
                 view_more: true
             }));
@@ -111,7 +111,7 @@ export class MangaOwl extends Source {
 
     }
 
-    async getJapaneseManga(sectionCallback: (section: HomeSection) => void, apiUrl: string): Promise<MangaTile[]>{
+    async getJapaneseManga(apiUrl: string): Promise<MangaTile[]>{
         const options: Request = createRequestObject({
             url: `${apiUrl}/raw_updated_manga`,
             method: 'GET'
