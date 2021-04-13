@@ -20,7 +20,7 @@ export class MangaOwlParser {
                 id: id,
                 image: image || "",
                 title: createIconText({
-                    text: title || ""
+                    text: this.decodeHTMLEntity(title || "")
                 })
             }
             if (tileTimeAsPrimaryText) {
@@ -159,7 +159,7 @@ export class MangaOwlParser {
             titles = titles.concat(parts[0].split("; "))
         }
         for (let i = 0; i < titles.length; i++) {
-            titles[i] = this.decodeHTMLEntity(titles[i]);
+            titles[i] = this.decodeHTMLEntity(titles[i].replace(/\s{2,}/, " "));
         }
         const mangaObj: Manga = {
             id: mangaId,
@@ -171,10 +171,10 @@ export class MangaOwlParser {
             tags: tagSections,
         }
         if (parts[1]) {
-            mangaObj.author = parts[1];
+            mangaObj.author = parts[1].replace(/\s{2,}/, " ");
         }
         if (parts[2]) {
-            mangaObj.artist = parts[2];
+            mangaObj.artist = parts[2]/replace(/\s{2,}/, " ");
         }
         if (parts[3]) {
             mangaObj.views = Number((parts[3] || "0").replace(",", ""));
@@ -186,7 +186,7 @@ export class MangaOwlParser {
             }
         }
         if (summary.length > 0) {
-            mangaObj.desc = this.decodeHTMLEntity(summary);
+            mangaObj.desc = this.decodeHTMLEntity(summary.replace(/\s{2,}/, " "));
         }
         return createManga(mangaObj);
     }
