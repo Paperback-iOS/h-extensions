@@ -77,7 +77,7 @@ export class MangaOwlParser {
                     }
                 }
                 lastNumber = chapNum
-                const dateParts = $("small", element).first().text().split("/")
+                const dateParts = $("small:not([style])", element).first().text().split("/")
                 const chapterObj: Chapter = {
                     chapNum: chapNum,
                     id: linkId,

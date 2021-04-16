@@ -61,7 +61,8 @@ describe('MangaOwl Tests', function () {
              title: 'Keep a High'
          });
 
-         let search = await wrapper.searchRequest(source, testSearch, 1);
+         let search = await wrapper.searchRequest(source, testSearch, null);
+         let search2 = await wrapper.searchRequest(source, testSearch, search.metadata);
          let result = search.results[0];
 
          expect(result, "No response from server").to.exist;
@@ -69,6 +70,8 @@ describe('MangaOwl Tests', function () {
          expect(result.id, "No ID found for search query").to.be.not.empty;
          expect(result.image, "No image found for search").to.be.not.empty;
          expect(result.title, "No title").to.be.not.null;
+
+         expect(search.results).to.not.eql(search2.results);
     })
 
     it("Testing Home-Page aquisition", async() => {
