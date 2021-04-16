@@ -25,7 +25,7 @@ interface JapaneseMangaObj {
 
 export const MangaOwlInfo: SourceInfo = {
     icon: "icon.png",
-    version: "1.3.5",
+    version: "2.0.0",
     name: "MangaOwl",
     author: "PythonCoderAS",
     authorWebsite: "https://github.com/PythonCoderAS",
@@ -52,6 +52,8 @@ export const MangaOwlInfo: SourceInfo = {
 export class MangaOwl extends Source {
 
     private readonly parser: MangaOwlParser = new MangaOwlParser();
+
+    private readonly readerDomain: string = "chessmoba.us";
 
     readonly requestManager = createRequestManager({
         requestsPerSecond: 3,
@@ -183,8 +185,16 @@ export class MangaOwl extends Source {
     }
 
     async getChapterDetails(mangaId: string, chapterId: string): Promise<ChapterDetails> {
+        if (isNaN(Number(chapterId))){
+            const match = chapterId.match(this.parser.chapterIdRegex);
+            if (match){
+                chapterId = match[1];
+            } else {
+                throw new Error("Unknown Chapter ID format.")
+            }
+        }
         const options: Request = createRequestObject({
-            url: `${chapterId}`,
+            url: `https://${this.readerDomain}/reader/reader/${mangaId}/${chapterId}/0`,
             method: 'GET'
         });
         let response = await this.requestManager.schedule(options, 1);

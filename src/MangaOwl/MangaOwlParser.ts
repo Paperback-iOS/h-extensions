@@ -4,6 +4,8 @@ export class MangaOwlParser {
 
     private readonly chapterTitleRegex = /Chapter ([\d.]+)/i
     private readonly apiURLRegex = /window\[["']api_url["']]\s*=\s*["']([^\s'"]+)["']/i
+    public readonly chapterIdRegex = /\/reader\/reader\/\d+\/(\d+)/i
+    private readonly notFoundRegex = /^\s*not found\.*$/i
 
     decodeHTMLEntity(str: string): string {
         return str.replace(/&#(\d+);/g, function (match, dec) {
@@ -65,6 +67,9 @@ export class MangaOwlParser {
             const linkId = link.attr("href");
             const title = $("label.chapter-title", element).text().trim();
             if (linkId) {
+                const chapterIdMatch = linkId.match(this.chapterIdRegex);
+                if (chapterIdMatch){
+                    const chapterId = chapterIdMatch[1];
                 const match = title.match(this.chapterTitleRegex);
                 let chapNum;
                 if (match) {
@@ -80,7 +85,7 @@ export class MangaOwlParser {
                 const dateParts = $("small:not([style])", element).first().text().split("/")
                 const chapterObj: Chapter = {
                     chapNum: chapNum,
-                    id: linkId,
+                    id: chapterId,
                     langCode: LanguageCode.ENGLISH,
                     mangaId: mangaId,
                 }
@@ -89,6 +94,7 @@ export class MangaOwlParser {
                     chapterObj.time = new Date(Date.UTC(Number(dateParts[2]), Number(dateParts[0]) - 1, Number(dateParts[1])));
                 }
                 chapters.push(createChapter(chapterObj));
+            }
             }
         })
         return chapters
@@ -100,7 +106,7 @@ export class MangaOwlParser {
 
     parseManga($: CheerioStatic, mangaId: string) {
         const genreList: Tag[] = [];
-        const summary: string = $("div.description").first().children().remove().end().text().replace(/\s{2,}/, " ").trim();
+        const summary: string = $("div.description").first().children().remove().end().text().replaceAll(/\s{2,}/g, " ").trim();
         $("p > a.label",).map(((index, element) => {
             if ("attribs" in element) {
                 genreList.push(createTag({
@@ -185,7 +191,7 @@ export class MangaOwlParser {
                 mangaObj.lastUpdate = chapterObj.time.toString();
             }
         }
-        if (summary.length > 0) {
+        if (summary.length > 0 && !summary.match(this.notFoundRegex)) {
             mangaObj.desc = this.decodeHTMLEntity(summary.replace(/\s{2,}/, " "));
         }
         return createManga(mangaObj);
