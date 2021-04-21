@@ -18,13 +18,14 @@ import {
 const ME_DOMAIN = "https://manhwa18.net";
 
 export const ManhwaEighteenInfo: SourceInfo = {
-  version: "2.0.5",
+  version: "2.0.6",
   name: "Manhwa18",
   description: `Extension which pulls content from Manhwa18.`,
   author: `VibrantClouds`,
   authorWebsite: `https://github.com/conradweiser`,
   icon: `logo.png`,
-  hentaiSource: true,
+  //hentaiSource: true,
+  hentaiSource: false,
   sourceTags: [{ text: "18+", type: TagType.YELLOW }],
   websiteBaseURL: ME_DOMAIN,
 };
@@ -127,7 +128,8 @@ export class ManhwaEighteen extends Source {
       rating: rating,
       langFlag: lang,
       langName: lang,
-      hentai: true, // This is an 18+ source
+      //hentai: true, // This is an 18+ source
+      hentai: false
     });
   }
 

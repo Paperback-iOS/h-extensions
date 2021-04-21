@@ -2,13 +2,14 @@ import { Source, Manga, Chapter, ChapterDetails, HomeSection, MangaTile, SearchR
 const NHENTAI_DOMAIN = 'https://nhentai.net'
 
 export const NHentaiInfo: SourceInfo = {
-  version: '2.0.0',
+  version: '2.0.1',
   name: 'nHentai',
   description: `Extension which pulls 18+ content from nHentai. (Literally all of it. We know why you're here)`,
   author: `VibrantClouds`,
   authorWebsite: `https://github.com/conradweiser`,
   icon: `logo.png`,
-  hentaiSource: true,
+  //hentaiSource: true,
+  hentaiSource: false,
   sourceTags: [{text: "18+", type: TagType.YELLOW}],
   websiteBaseURL: NHENTAI_DOMAIN
 }
@@ -95,7 +96,8 @@ export class NHentai extends Source {
       status: status,
       artist: artist,
       tags: tagSections,
-      hentai: hentai
+      //hentai: hentai
+      hentai: false
     })
   }
   
