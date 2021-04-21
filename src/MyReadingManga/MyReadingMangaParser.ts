@@ -3,18 +3,15 @@ import { parseLanguage } from "./Languages";
 
 export const parseMangaDetails = ($: CheerioStatic, mangaId: string): Manga => {
     // Titles
-    const title: string =
-        decodeHTMLEntity($(".entry-title", ".post").text()).replace(/(\[.+?\])/g, "").replace(/(\(.+?\))/g, "").trim() ?? "";
+    const title: string = decodeHTMLEntity($(".entry-title", ".post").text()).replace(/(\[.+?\])/g, "").replace(/(\(.+?\))/g, "").trim() ?? "";
     let titles: string[] = [title];
-    const altTitleArray: string[] | null = decodeHTMLEntity($(".entry-title", ".post").text())
-        .replace(/(\[.+?\])/g, "")
-        .match(/(\(.+?\))/g);
-    if (altTitleArray !== null && altTitleArray.length > 0) {
+    const altTitleArray: string[] = decodeHTMLEntity($(".entry-title", ".post").text()).replace(/(\[.+?\])/g, "").match(/(\(.+?\))/g) ?? [];
+    if (altTitleArray.length > 0) {
         for (const altTitle of altTitleArray) {
             titles.push(altTitle.replace(/(\(|\))/g, "").trim());
         }
     }
-    const altTitleInContent: string[] | null = decodeHTMLEntity($(".alt-title-class").next().text()).split("\n") ?? "";
+    const altTitleInContent: string[] = decodeHTMLEntity($(".alt-title-class").next().text()).split("\n") ?? "";
     if (altTitleInContent.length > 0) {
         for (const altTitle of altTitleInContent) {
             titles.push(altTitle.trim());
@@ -22,8 +19,8 @@ export const parseMangaDetails = ($: CheerioStatic, mangaId: string): Manga => {
     }
     // Author
     let author = "";
-    const authorFound: string[] | null = decodeHTMLEntity($(".entry-title", ".post").text()).match(/(\[.+?\])/g);
-    if (authorFound !== null && authorFound.length > 0) {
+    const authorFound: string[] = decodeHTMLEntity($(".entry-title", ".post").text()).match(/(\[.+?\])/g) ?? [];
+    if (authorFound.length > 0) {
         author = authorFound[0].toString().replace(/(\[|\])/g, "").trim();
     }
     // Metadata
@@ -93,7 +90,7 @@ export const parseMangaDetails = ($: CheerioStatic, mangaId: string): Manga => {
     // Last update
     const lastUpdate = timeSince(new Date(Date.parse($(".entry-time").attr("datetime") ?? "0")));
     // NSFW type
-    const hentai = true;
+    const hentai = false; // ! Temporary until Mangadex is back up / Paperback login is in place
     // Description
     let description: string = titles.join("\n") + "\n";
     let summary: string = "";
@@ -137,15 +134,15 @@ export const parseMangaDetails = ($: CheerioStatic, mangaId: string): Manga => {
             tags: tagsTags,
         }),
     ];
-
     // Related IDs
     let relatedIds: string[] = [];
     for (const element of $("div > .jp-relatedposts-post-a").toArray()) {
         const mangaLink = $(element).attr("href") ?? "";
-        if (mangaLink !== null && mangaLink.length > 0) {
+        if (mangaLink.length > 0) {
             relatedIds.push(mangaLink.split("/").reverse()[1] ?? "");
         }
     }
+    if (!titles || !status) throw new Error("An error occured while parsing the requested manga");
 
     return createManga({
         id: mangaId,
@@ -230,7 +227,7 @@ export const parseChapterDetails = ($: CheerioStatic, mangaId: string, chapterId
     for (const img of $("img", container).toArray()) {
         pages.push(encodeURI(getImageSrc($(img))));
     }
-
+    if (!pages ) throw new Error("An error occured while parsing pages for this chapter");
     return createChapterDetails({
         id: chapterId,
         mangaId: mangaId,
@@ -242,22 +239,20 @@ export const parseChapterDetails = ($: CheerioStatic, mangaId: string, chapterId
 export const parseHomeSections = ($: CheerioStatic, sectionId: string): MangaTile[] => {
     let mangaTiles: MangaTile[] = [];
     const collectedIds: string[] = [];
-    if (sectionId === "1_recently_updated" || sectionId == "6_randomly_selected") {
-        // Different page structure since it's a search result
+    if (sectionId === "1_recently_updated" || sectionId == "6_randomly_selected") { // Different page structure since it's a search result
         mangaTiles = mangaTiles.concat(parseSearchResults($));
     } else {
         const container: Cheerio = $("main.content");
         for (const element of $(".post", container).toArray()) {
             const id: string = ($(".entry-title-link", element).attr("href") ?? "").split("/").reverse()[1] ?? "";
-            const title: string =
-                decodeHTMLEntity($(".entry-title-link", element).text()).replace(/(\[.+?\])/g, "").replace(/(\(.+?\))/g, "").trim() ?? "";
+            const title: string = decodeHTMLEntity($(".entry-title-link", element).text()).replace(/(\[.+?\])/g, "").replace(/(\(.+?\))/g, "").trim() ?? "";
             const image: string = encodeURI(getImageSrc($(".post-image", element)));
             let author: string = "";
-            const authorFound: string[] | null = decodeHTMLEntity($(".entry-title-link", element).text()).match(/(\[.+?\])/g);
-            if (authorFound !== null && authorFound.length > 0) {
+            const authorFound: string[] = decodeHTMLEntity($(".entry-title-link", element).text()).match(/(\[.+?\])/g) ?? [];
+            if ( authorFound.length > 0) {
                 author = authorFound[0].toString().replace(/(\[|\])/g, "").trim();
             }
-            if (typeof id === "undefined" || typeof image === "undefined") continue;
+            if (!id || !title) continue;
             if (!collectedIds.includes(id)) {
                 mangaTiles.push(
                     createMangaTile({
@@ -283,14 +278,14 @@ export const parseSearchResults = ($: CheerioStatic): MangaTile[] => {
         const id: string = ($("a", element).attr("href") ?? "").split("/").reverse()[1] ?? "";
         const title: string =
             $(".p_title", element).text().replace(/(\[.+?\])/g, "").replace(/(\(.+?\))/g, "").trim() ?? "";
-        const image: string = encodeURI(getImageSrc($(".wdm_result_list_thumb", element)));
+        const image: string = encodeURI(getImageSrc($(".wdm_result_list_thumb", element))) ?? "";
         const category: string = $("span.pcat > span.pcat", element).text() ?? "";
         let author: string = "";
-        const authorFound: string[] | null = decodeHTMLEntity($(".p_title", element).text()).match(/(\[.+?\])/g);
-        if (authorFound !== null && authorFound.length > 0) {
+        const authorFound: string[] = decodeHTMLEntity($(".p_title", element).text()).match(/(\[.+?\])/g) ?? [];
+        if (authorFound.length > 0) {
             author = authorFound[0].toString().replace(/(\[|\])/g, "").trim();
         }
-        if (typeof id === "undefined" || typeof image === "undefined") continue;
+        if (!id || !title) continue;
         if (!category.match(/in Video/)) {
             if (!collectedIds.includes(id)) {
                 mangaTiles.push(
@@ -341,7 +336,7 @@ const decodeHTMLEntity = (str: string): string => {
 };
 
 const getImageSrc = (imageObj: Cheerio | undefined): string => {
-    const hasDataSrc = typeof imageObj?.attr("data-src") != "undefined";
+    const hasDataSrc = typeof imageObj?.attr("data-src") !== "undefined";
     const image = hasDataSrc ? imageObj?.attr("data-src") : imageObj?.attr("src");
 
     return image?.trim() ?? "";

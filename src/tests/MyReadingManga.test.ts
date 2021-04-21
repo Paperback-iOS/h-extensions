@@ -16,7 +16,7 @@ describe("MyReadingManga Tests", function () {
      * return proper results, as it is limited to searching 30 days back due to extremely long processing times otherwise.
      */
 
-    // Tests will fail because of cloudflare
+    // ! Tests will fail because of cloudflare
     var mangaId = "milmil-untouchable-my-hero-academia-dj-eng";
 
     it("Retrieve Manga Details", async () => {
@@ -77,12 +77,12 @@ describe("MyReadingManga Tests", function () {
         expect(homePages[5], "No RANDOMLY SELECTED section available").to.exist;
     })
 
-    it("Testing home page results for RECENTLY UPDATED titles", async () => {
+    it("Testing view more results for RECENTLY UPDATED titles", async () => {
         let results = await wrapper.getViewMoreItems(source, "1_recently_updated", {}, 1);
-        let resultsWithPagedData = await wrapper.getViewMoreItems(source, "1_recently_updated", {}, 3);
+        let resultsWithPagedData = await wrapper.getViewMoreItems(source, "1_recently_updated", {page: 3}, 1);
 
         expect(results, "No results whatsoever for this section").to.exist;
-        expect(results, "No results whatsoever for this section").to.exist;
+        expect(resultsWithPagedData, "No results for page 3").to.exist;
 
         let data = results![0];
         expect(data.id, "No ID present").to.exist;
@@ -90,12 +90,12 @@ describe("MyReadingManga Tests", function () {
         expect(data.title.text, "No title present").to.exist;
     });
 
-    it("Testing home page results for YAOI MANGAS titles", async () => {
+    it("Testing view more results for YAOI MANGAS titles", async () => {
         let results = await wrapper.getViewMoreItems(source, "2_yaoi", {}, 1);
-        let resultsWithPagedData = await wrapper.getViewMoreItems(source, "2_yaoi", {}, 3);
+        let resultsWithPagedData = await wrapper.getViewMoreItems(source, "2_yaoi", {page: 3}, 1);
 
         expect(results, "No results whatsoever for this section").to.exist;
-        expect(results, "No results whatsoever for this section").to.exist;
+        expect(resultsWithPagedData, "No results for page 3").to.exist;
 
         let data = results![0];
         expect(data.id, "No ID present").to.exist;
@@ -103,12 +103,12 @@ describe("MyReadingManga Tests", function () {
         expect(data.title.text, "No title present").to.exist;
         });
     
-    it("Testing home page results for MANHWA titles", async () => {
+    it("Testing view more results for MANHWA titles", async () => {
         let results = await wrapper.getViewMoreItems(source, "3_manhwa", {}, 1);
-        let resultsWithPagedData = await wrapper.getViewMoreItems(source, "3_manhwa", {}, 3);
+        let resultsWithPagedData = await wrapper.getViewMoreItems(source, "3_manhwa", {page: 3}, 1);
 
         expect(results, "No results whatsoever for this section").to.exist;
-        expect(results, "No results whatsoever for this section").to.exist;
+        expect(resultsWithPagedData, "No results for page 3").to.exist;
 
         let data = results![0];
         expect(data.id, "No ID present").to.exist;
@@ -116,12 +116,12 @@ describe("MyReadingManga Tests", function () {
         expect(data.title.text, "No title present").to.exist;
         });
     
-    it("Testing home page results for MANHUA titles", async () => {
+    it("Testing view more results for MANHUA titles", async () => {
         let results = await wrapper.getViewMoreItems(source, "4_manhua", {}, 1);
         let resultsWithPagedData = await wrapper.getViewMoreItems(source, "4_manhua", {}, 3);
 
         expect(results, "No results whatsoever for this section").to.exist;
-        expect(results, "No results whatsoever for this section").to.exist;
+        expect(resultsWithPagedData, "No results for page 3").to.exist;
 
         let data = results![0];
         expect(data.id, "No ID present").to.exist;
@@ -129,12 +129,12 @@ describe("MyReadingManga Tests", function () {
         expect(data.title.text, "No title present").to.exist;
         });
     
-    it("Testing home page results for BARA titles", async () => {
+    it("Testing view more results for BARA titles", async () => {
         let results = await wrapper.getViewMoreItems(source, "5_bara", {}, 1);
-        let resultsWithPagedData = await wrapper.getViewMoreItems(source, "5_bara", {}, 3);
+        let resultsWithPagedData = await wrapper.getViewMoreItems(source, "5_bara", {page: 3}, 1);
 
         expect(results, "No results whatsoever for this section").to.exist;
-        expect(results, "No results whatsoever for this section").to.exist;
+        expect(resultsWithPagedData, "No results for page 3").to.exist;
 
         let data = results![0];
         expect(data.id, "No ID present").to.exist;
@@ -142,12 +142,12 @@ describe("MyReadingManga Tests", function () {
         expect(data.title.text, "No title present").to.exist;
         });
     
-    it("Testing home page results for RANDOMLY SELECTED titles", async () => {
+    it("Testing view more results for RANDOMLY SELECTED titles", async () => {
         let results = await wrapper.getViewMoreItems(source, "6_randomly_selected", {}, 1);
-        let resultsWithPagedData = await wrapper.getViewMoreItems(source, "6_randomly_selected", {}, 3);
+        let resultsWithPagedData = await wrapper.getViewMoreItems(source, "6_randomly_selected", {page: 3}, 1);
 
         expect(results, "No results whatsoever for this section").to.exist;
-        expect(results, "No results whatsoever for this section").to.exist;
+        expect(resultsWithPagedData, "No results for page 3").to.exist;
 
         let data = results![0];
         expect(data.id, "No ID present").to.exist;

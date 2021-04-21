@@ -4,13 +4,13 @@ import { isLastPage, parseChapterDetails, parseChapters, parseHomeSections, pars
 const MRM_DOMAIN = "https://myreadingmanga.info";
 
 export const MyReadingMangaInfo: SourceInfo = {
-    version: "1.0.0",
+    version: "1.0.1",
     name: "MyReadingManga",
     icon: "icon.png",
     author: "Ankah",
     authorWebsite: "https://github.com/AdrienSeon",
     description: "Extension that pulls manga from MyReadingManga",
-    hentaiSource: true,
+    hentaiSource: false, // ! Temporary until Mangadex is back up / Paperback login is in place
     websiteBaseURL: MRM_DOMAIN,
     sourceTags: [
         {
@@ -224,7 +224,7 @@ export class MyReadingManga extends Source {
 
     cloudflareError(status: any) {
         if (status === 503) {
-            throw "CLOUDFLARE BYPASS ERROR: Please go to Settings > Sources > MyReadingManga and press Cloudflare Bypass";
+            throw new Error("CLOUDFLARE BYPASS ERROR: Please go to Settings > Sources > MyReadingManga and press Cloudflare Bypass");
         }
     }
 
