@@ -227,7 +227,7 @@ export const parseChapterDetails = ($: CheerioStatic, mangaId: string, chapterId
     for (const img of $("img", container).toArray()) {
         pages.push(encodeURI(getImageSrc($(img))));
     }
-    if (!pages ) throw new Error("An error occured while parsing pages for this chapter");
+    if (!pages ) throw new Error("An error occurred while parsing pages for this chapter");
     return createChapterDetails({
         id: chapterId,
         mangaId: mangaId,
