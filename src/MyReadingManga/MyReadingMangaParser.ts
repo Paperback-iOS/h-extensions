@@ -142,7 +142,7 @@ export const parseMangaDetails = ($: CheerioStatic, mangaId: string): Manga => {
             relatedIds.push(mangaLink.split("/").reverse()[1] ?? "");
         }
     }
-    if (!titles || !status) throw new Error("An error occured while parsing the requested manga");
+    if (!titles) throw new Error("An error occurred while parsing the requested manga");
 
     return createManga({
         id: mangaId,
