@@ -25,7 +25,7 @@ interface JapaneseMangaObj {
 
 export const MangaOwlInfo: SourceInfo = {
     icon: "icon.png",
-    version: "2.0.0",
+    version: "2.0.1",
     name: "MangaOwl",
     author: "PythonCoderAS",
     authorWebsite: "https://github.com/PythonCoderAS",

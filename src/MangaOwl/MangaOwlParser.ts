@@ -62,46 +62,53 @@ export class MangaOwlParser {
     parseChapterList($: CheerioStatic, mangaId: string) {
         const chapters: Chapter[] = [];
         let lastNumber: number | null = null;
-        $("ul#simpleList li").toArray().reverse().map((element) => {
+        const selector = $("ul#simpleList li");
+        if (selector.length === 0){
+            return chapters;
+        }
+        selector.toArray().reverse().map((element) => {
             const link = $("a", element).first();
             const linkId = link.attr("href");
             const title = $("label.chapter-title", element).text().trim();
             if (linkId) {
                 const chapterIdMatch = linkId.match(this.chapterIdRegex);
-                if (chapterIdMatch){
+                if (chapterIdMatch) {
                     const chapterId = chapterIdMatch[1];
-                const match = title.match(this.chapterTitleRegex);
-                let chapNum;
-                if (match) {
-                    chapNum = Number(match[1])
-                } else {
-                    if (lastNumber === null) {
-                        chapNum = 0;
+                    const match = title.match(this.chapterTitleRegex);
+                    let chapNum;
+                    if (match) {
+                        chapNum = Number(match[1])
                     } else {
-                        chapNum = Number((lastNumber + 0.001).toFixed(3))
+                        if (lastNumber === null) {
+                            chapNum = 0;
+                        } else {
+                            chapNum = Number((lastNumber + 0.001).toFixed(3))
+                        }
                     }
-                }
-                lastNumber = chapNum
-                const dateParts = $("small:not([style])", element).first().text().split("/")
-                const chapterObj: Chapter = {
-                    chapNum: chapNum,
-                    id: chapterId,
-                    langCode: LanguageCode.ENGLISH,
-                    mangaId: mangaId,
-                }
-                if (dateParts.length === 3) {
+                    lastNumber = chapNum
+                    const dateParts = $("small:not([style])", element).first().text().split("/")
+                    const chapterObj: Chapter = {
+                        chapNum: chapNum,
+                        id: chapterId,
+                        langCode: LanguageCode.ENGLISH,
+                        mangaId: mangaId,
+                    }
+                    if (dateParts.length === 3) {
 
-                    chapterObj.time = new Date(Date.UTC(Number(dateParts[2]), Number(dateParts[0]) - 1, Number(dateParts[1])));
+                        chapterObj.time = new Date(Date.UTC(Number(dateParts[2]), Number(dateParts[0]) - 1, Number(dateParts[1])));
+                    }
+                    chapters.push(createChapter(chapterObj));
                 }
-                chapters.push(createChapter(chapterObj));
-            }
             }
         })
         return chapters
     }
 
     getPart($: CheerioStatic, element: CheerioElement, partsArr: (string | null)[], index: number) {
-        partsArr[index] = $("span", element).remove().end().text().replace(/\s{2,}/, " ").trim();
+        const toAdd = $("span", element).remove().end().text().replace(/\s{2,}/, " ").trim();
+        if (toAdd) {
+             partsArr[index] = toAdd
+        }
     }
 
     parseManga($: CheerioStatic, mangaId: string) {
@@ -185,7 +192,7 @@ export class MangaOwlParser {
         if (parts[3]) {
             mangaObj.views = Number((parts[3] || "0").replace(",", ""));
         }
-        if (chapterList) {
+        if (chapterList && chapterList.length > 0) {
             const chapterObj = chapterList[chapterList.length - 1]
             if (chapterObj.time) {
                 mangaObj.lastUpdate = chapterObj.time.toString();
