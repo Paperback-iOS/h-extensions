@@ -59,11 +59,11 @@ export class MangaOwlParser {
         return pages;
     }
 
-    parseChapterList($: CheerioStatic, mangaId: string) {
+    parseChapterList($: CheerioStatic, mangaId: string): Chapter[] {
         const chapters: Chapter[] = [];
         let lastNumber: number | null = null;
         const selector = $("ul#simpleList li");
-        if (selector.length === 0){
+        if (selector.length === 0) {
             return chapters;
         }
         selector.toArray().reverse().map((element) => {
@@ -76,7 +76,7 @@ export class MangaOwlParser {
                     const chapterId = chapterIdMatch[1];
                     const match = title.match(this.chapterTitleRegex);
                     let chapNum;
-                    if (match) {
+                    if (match && !isNaN(Number(match[1]))) {
                         chapNum = Number(match[1])
                     } else {
                         if (lastNumber === null) {
@@ -93,8 +93,7 @@ export class MangaOwlParser {
                         langCode: LanguageCode.ENGLISH,
                         mangaId: mangaId,
                     }
-                    if (dateParts.length === 3) {
-
+                    if (dateParts.length === 3 && !isNaN(Number(dateParts[2])) && !isNaN(Number(dateParts[0])) && !isNaN(Number(dateParts[1]))) {
                         chapterObj.time = new Date(Date.UTC(Number(dateParts[2]), Number(dateParts[0]) - 1, Number(dateParts[1])));
                     }
                     chapters.push(createChapter(chapterObj));
@@ -107,7 +106,7 @@ export class MangaOwlParser {
     getPart($: CheerioStatic, element: CheerioElement, partsArr: (string | null)[], index: number) {
         const toAdd = $("span", element).remove().end().text().replace(/\s{2,}/, " ").trim();
         if (toAdd) {
-             partsArr[index] = toAdd
+            partsArr[index] = toAdd
         }
     }
 
