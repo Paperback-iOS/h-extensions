@@ -214,7 +214,7 @@ export class NHentai extends Source {
     }
     else {
       query.title = query.title?.trim()
-      query.title = query.title.replaceAll(" ", "+") + '+'
+      query.title = query.title.replace(/ /g, "+") + '+'
 
       request = createRequestObject({
         url: `${NHENTAI_DOMAIN}/search/?q=${query.title}&page=${page}`,
