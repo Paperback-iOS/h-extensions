@@ -5,29 +5,33 @@ const HH_DOMAIN = 'https://hentaihere.com'
 export const parseMangaDetails = ($: CheerioStatic, mangaId: string): Manga => {
 
   const titles = [];
-  const titleContext = $("a", $("h4", "div.bg-black")).first();
-  titles.push(decodeHTMLEntity(titleContext.text().replace($("span.mngType", titleContext).text(), "").trim()));
+  const title = $("h4 > a").first().text().trim()
+  if (!title) throw new Error("Unable to parse title!"); //If not title is present, throw error!
+
+  titles.push(decodeHTMLEntity(title));
 
   const artist = $("span:contains(Artist:)").next().text().trim(); //Only displays first artist, can't find any hentai that had multiple artists lol
-  const image = $("img", "div#cover").attr('src') ?? "";
+  const image = $("img", "div#cover").attr('src') ?? "https://i.imgur.com/GYUxEX8.png"; //Super cool fallback image, since the app doesn't have one yet.
 
   //Content Tags
   const arrayTags: Tag[] = [];
   for (const tag of $("a.tagbutton", $("span:contains(Content:)").parent()).toArray()) {
     const label = $(tag).text().trim();
     const id = encodeURI($(tag).attr("href")?.replace(`/search/`, "").trim() ?? "");
+    if (!id || !label) continue;
     arrayTags.push({ id: id, label: label });
   }
   //Category Tags
   for (const tag of $("a.tagbutton", $("span:contains(Catergory:)").parent()).toArray()) {
     const label = $(tag).text().trim();
     const id = encodeURI($(tag).attr("href")?.replace(`/search/`, "").trim() ?? "");
+    if (!id || !label) continue;
     arrayTags.push({ id: id, label: label });
   }
   const tagSections: TagSection[] = [createTagSection({ id: '0', label: 'genres', tags: arrayTags.map(x => createTag(x)) })];
 
   const description = decodeHTMLEntity($("span:contains(Brief Summary:)").parent().text().replace($("span:contains(Brief Summary:)").text(), "").trim());
-  const customDescription = `Description \n${description}\n\nTags \n${arrayTags.map(t => t.label).join(", ")}`
+  const customDescription = `Description \n${description == "" ? "No description available!" : description}\n\nTags \n${arrayTags.map(t => t.label).join(", ")}`
 
   const rawStatus = $("span:contains(Status:)").next().text().trim();
   let status = MangaStatus.ONGOING;
@@ -63,16 +67,18 @@ export const parseChapters = ($: CheerioStatic, mangaId: string): Chapter[] => {
 
   for (const c of $("li.sub-chp", "ul.arf-list").toArray()) {
     const title = decodeHTMLEntity($("span.pull-left", c).text().replace($("span.pull-left i.text-muted", c).text(), "").trim());
-    const id = String($("a", c).attr('href')?.split(`/m/${mangaId}/`)[1]?.split("/")[1] ?? "");
-    const date = new Date(Date.now() - 2208986640000); // *Lennyface*
-    const chapterNumber = Number(id.replace(/\//g, ""));
+    const rawID = $("a", c).attr('href') ?? "";
+    const id = /m\/[A-z0-9]+\/(\d+)/.test(rawID) ? rawID.match(/m\/[A-z0-9]+\/(\d+)/)![1] : "";
+    if (id == "") continue;
+    const date = new Date(Date.now() - 2208986640000); // *Lennyface* 
+    const chapterNumber = isNaN(Number(id)) ? 0 : id;
 
     chapters.push(createChapter({
       id: id,
       mangaId,
       name: title,
       langCode: LanguageCode.ENGLISH,
-      chapNum: chapterNumber,
+      chapNum: Number(chapterNumber),
       time: date,
     }));
   }
@@ -81,7 +87,11 @@ export const parseChapters = ($: CheerioStatic, mangaId: string): Chapter[] => {
 
 export const parseChapterDetails = (data: any, mangaId: string, chapterId: string): ChapterDetails => {
   const pages: string[] = [];
-  const obj = JSON.parse(/var rff_imageList = (.*);/.exec(data)?.[1] ?? "");
+  let obj = /var rff_imageList = (.*);/.exec(data)?.[1] ?? ""; //Get the data else return null.
+
+  if (obj == "") throw new Error("Unable to parse chapter details!"); //If null, throw error, else parse data to json.
+  obj = JSON.parse(obj);
+
   for (const i of obj) {
     const page = "https://hentaicdn.com/hentai" + i;
     pages.push(page);
@@ -137,7 +147,6 @@ export const parseHomeSections = ($: CheerioStatic, sections: HomeSection[], sec
     }));
   }
   sections[1].items = recentlyAdded;
-  console.log(recentlyAdded)
   sectionCallback(sections[1]);
 
   //Trending
@@ -210,6 +219,7 @@ export const parseTags = ($: CheerioStatic): TagSection[] | null => {
   for (const tag of $("div.list-group", "div.col-xs-12").toArray()) {
     const label = $("span.clear > span", tag).text().trim();
     const id = $("a.list-group-item", tag).attr('href')?.replace(`/search/`, "").trim() ?? "";
+    if (!id || !label) continue;
     arrayTags.push({ id: id, label: label });
   }
   const tagSections: TagSection[] = [createTagSection({ id: '0', label: 'genres', tags: arrayTags.map(x => createTag(x)) })];
