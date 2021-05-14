@@ -15,7 +15,7 @@ describe('HentaiHere Tests', function () {
      * Try to choose a manga which is updated frequently, so that the historical checking test can 
      * return proper results, as it is limited to searching 30 days back due to extremely long processing times otherwise.
      */
-    var mangaId = "S39601";
+    var mangaId = "S25969";
 
     it("Retrieve Manga Details", async () => {
         let details = await wrapper.getMangaDetails(source, mangaId);
@@ -110,9 +110,9 @@ describe('HentaiHere Tests', function () {
     it("Testing Home-Page aquisition", async () => {
         let homePages = await wrapper.getHomePageSections(source)
         expect(homePages, "No response from server").to.exist
-        expect(homePages[0], "No top weekly section available").to.exist
-        expect(homePages[1], "No latest updates section available").to.exist
-        expect(homePages[2], "No new manga section available").to.exist
+        expect(homePages[0], "No staff pick section available").to.exist
+        expect(homePages[1], "No recently added section available").to.exist
+        expect(homePages[2], "No trending section available").to.exist
     });
 
     it("Get tags", async () => {

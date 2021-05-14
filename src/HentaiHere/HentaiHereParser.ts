@@ -1,5 +1,7 @@
 import { Chapter, ChapterDetails, Tag, HomeSection, LanguageCode, Manga, MangaStatus, MangaTile, MangaUpdates, PagedResults, SearchRequest, TagSection } from "paperback-extensions-common";
 
+const entities = require("entities"); //Import package for decoding HTML entities
+
 const HH_DOMAIN = 'https://hentaihere.com'
 
 export const parseMangaDetails = ($: CheerioStatic, mangaId: string): Manga => {
@@ -242,8 +244,6 @@ export const isLastPage = ($: CheerioStatic): boolean => {
 }
 
 const decodeHTMLEntity = (str: string): string => {
-  return str.replace(/&#(\d+);/g, function (match, dec) {
-    return String.fromCharCode(dec);
-  })
+  return entities.decodeHTML(str);
 }
 
