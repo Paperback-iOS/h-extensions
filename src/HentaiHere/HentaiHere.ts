@@ -16,7 +16,7 @@ const HH_DOMAIN = 'https://hentaihere.com'
 const method = 'GET'
 
 export const HentaiHereInfo: SourceInfo = {
-  version: '1.0.3',
+  version: '1.0.4',
   name: 'HentaiHere',
   icon: 'icon.png',
   author: 'Netsky',

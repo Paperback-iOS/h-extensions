@@ -220,7 +220,7 @@ export const parseTags = ($: CheerioStatic): TagSection[] | null => {
   const arrayTags: Tag[] = [];
   for (const tag of $("div.list-group", "div.col-xs-12").toArray()) {
     const label = $("span.clear > span", tag).text().trim();
-    const id = $("a.list-group-item", tag).attr('href')?.replace(`/search/`, "").trim() ?? "";
+    const id = $("a.list-group-item", tag).attr('href')?.replace(`${HH_DOMAIN}/search/`, "").trim() ?? "";
     if (!id || !label) continue;
     arrayTags.push({ id: id, label: label });
   }
