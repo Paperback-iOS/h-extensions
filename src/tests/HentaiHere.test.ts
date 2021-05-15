@@ -19,7 +19,7 @@ describe('HentaiHere Tests', function () {
 
     it("Retrieve Manga Details", async () => {
         let details = await wrapper.getMangaDetails(source, mangaId);
-        expect(details, "No results found with test-defined ID [" + mangaId + "]").to.exist
+        expect(details, "No results found with test-defined ID [" + mangaId + "]").to.exist;
 
         // Validate that the fields are filled
         let data = details;
@@ -39,9 +39,9 @@ describe('HentaiHere Tests', function () {
 
         let entry = data[0]
         expect(entry.id, "No ID present").to.not.be.empty;
-        expect(entry.time, "No date present").to.exist
-        expect(entry.name, "No title available").to.not.be.empty
-        expect(entry.chapNum, "No chapter number present").to.exist
+        expect(entry.time, "No date present").to.exist;
+        expect(entry.name, "No title available").to.not.be.empty;
+        expect(entry.chapNum, "No chapter number present").to.exist;
     });
     it("Get Chapter Details", async () => {
 
@@ -57,39 +57,39 @@ describe('HentaiHere Tests', function () {
     });
 
     it("Testing home page results for staff pick titles", async () => {
-        let results = await wrapper.getViewMoreItems(source, "staff_pick", {}, 1)
+        let results = await wrapper.getViewMoreItems(source, "staff_pick", {}, 1);
 
-        expect(results, "No results whatsoever for this section").to.exist
-        expect(results, "No results whatsoever for this section").to.exist
+        expect(results, "No results whatsoever for this section").to.exist;
+        expect(results, "Results are empty").to.not.be.empty;
 
-        let data = results![0]
-        expect(data.id, "No ID present").to.exist
-        expect(data.image, "No image present").to.exist
-        expect(data.title.text, "No title present").to.exist
+        let data = results![0];
+        expect(data.id, "No ID present").to.exist;
+        expect(data.image, "No image present").to.exist;
+        expect(data.title.text, "No title present").to.exist;
     });
 
     it("Testing home page results for recently added titles", async () => {
-        let results = await wrapper.getViewMoreItems(source, "recently_added", {}, 1)
+        let results = await wrapper.getViewMoreItems(source, "recently_added", {}, 1);
 
-        expect(results, "No results whatsoever for this section").to.exist
-        expect(results, "No results whatsoever for this section").to.exist
+        expect(results, "No results whatsoever for this section").to.exist;
+        expect(results, "Results are empty").to.not.be.empty;
 
-        let data = results![0]
-        expect(data.id, "No ID present").to.exist
-        expect(data.image, "No image present").to.exist
-        expect(data.title.text, "No title present").to.exist
+        let data = results![0];
+        expect(data.id, "No ID present").to.exist;
+        expect(data.image, "No image present").to.exist;
+        expect(data.title.text, "No title present").to.exist;
     });
 
     it("Testing home page results for trending titles", async () => {
-        let results = await wrapper.getViewMoreItems(source, "trending", {}, 1)
+        let results = await wrapper.getViewMoreItems(source, "trending", {}, 1);
 
-        expect(results, "No results whatsoever for this section").to.exist
-        expect(results, "No results whatsoever for this section").to.exist
+        expect(results, "No results whatsoever for this section").to.exist;
+        expect(results, "Results are empty").to.not.be.empty;
 
-        let data = results![0]
-        expect(data.id, "No ID present").to.exist
-        expect(data.image, "No image present").to.exist
-        expect(data.title.text, "No title present").to.exist
+        let data = results![0];
+        expect(data.id, "No ID present").to.exist;
+        expect(data.image, "No image present").to.exist;
+        expect(data.title.text, "No title present").to.exist;
     });
 
     it("Testing search", async () => {
@@ -97,8 +97,8 @@ describe('HentaiHere Tests', function () {
             title: 'love'
         });
 
-        let search = await wrapper.searchRequest(source, testSearch, { page: 28 });
-        let result = search.results[0]
+        let search = await wrapper.searchRequest(source, testSearch, { page: 1 });
+        let result = search.results[0];
 
         expect(result, "No response from server").to.exist;
         expect(result.id, "No ID found for search query").to.be.not.empty;
@@ -108,17 +108,17 @@ describe('HentaiHere Tests', function () {
     });
 
     it("Testing Home-Page aquisition", async () => {
-        let homePages = await wrapper.getHomePageSections(source)
-        expect(homePages, "No response from server").to.exist
-        expect(homePages[0], "No staff pick section available").to.exist
-        expect(homePages[1], "No recently added section available").to.exist
-        expect(homePages[2], "No trending section available").to.exist
+        let homePages = await wrapper.getHomePageSections(source);
+        expect(homePages, "No response from server").to.exist;
+        expect(homePages[0], "No staff pick section available").to.exist;
+        expect(homePages[1], "No recently added section available").to.exist;
+        expect(homePages[2], "No trending section available").to.exist;
     });
 
     it("Get tags", async () => {
-        let tags = await wrapper.getTags(source)
-        expect(tags, "No server response").to.exist
-        expect(tags, "Empty server response").to.not.be.empty
+        let tags = await wrapper.getTags(source);
+        expect(tags, "No server response").to.exist;
+        expect(tags, "Empty server response").to.not.be.empty;
     });
 
 
