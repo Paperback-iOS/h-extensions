@@ -71,7 +71,7 @@ export interface Response {
   /**
    * Uploaded date of this object in unix timestamp
    */
-  uploadedDate: number
+  upload_date: number
   /**
    * Tags of this object.
    */
@@ -79,9 +79,9 @@ export interface Response {
   /**
    * Number of pages this object has.
    */
-  numPages: number
+  num_pages: number
   /**
    * Number of favorites of this object in nhentai
    */
-  numFavorites: number
+  num_favorites: number
 }

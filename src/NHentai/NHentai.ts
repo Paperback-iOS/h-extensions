@@ -123,6 +123,8 @@ export class NHentai extends Source {
       else if (tag.type === "character")
         characters.push(createTag({ id: tag.id.toString(), label: capped }))
       else tags.push(createTag({ id: tag.id.toString(), label: capped }))
+
+      if (tag.type === "language") return
     })
 
     let TagSections: TagSection[] = [
@@ -158,53 +160,48 @@ export class NHentai extends Source {
   }
 
   async getChapters(mangaId: string): Promise<Chapter[]> {
+    const methodName = this.getMangaDetails.name
+
     const request = createRequestObject({
-      url: `${NHENTAI_DOMAIN}/g/${mangaId}`,
+      url: NHENTAI_API("gallery") + mangaId,
       method: "GET",
+      headers: {
+        "accept-encoding": "application/json",
+      },
     })
 
-    let data = await this.requestManager.schedule(request, 1)
+    const response = await this.requestManager.schedule(request, 1)
+    if (response.status > 400)
+      throw new Error(
+        `Failed to fetch data on ${methodName} with status code: ` +
+          response.status
+      )
 
-    let $ = this.cheerio.load(data.data)
-    let chapters: Chapter[] = []
+    const json: Response =
+      typeof response.data !== "object"
+        ? JSON.parse(response.data)
+        : response.data
+    if (!json) throw new Error(`Failed to parse response on ${methodName}`)
 
-    // NHentai is unique, where there is only ever one chapter.
-    let title = $("[itemprop=name]").attr("content") ?? ""
-    let time = new Date($("time").attr("datetime") ?? "")
+    let language: string = ""
 
-    // Clean up the title by removing all metadata, these are items enclosed within [ ] brackets
-    title = title.replace(/(\[.+?\])/g, "").trim()
+    json.tags.forEach((tag) => {
+      const capped = capitalize(tag.name)
+      if (tag.type === "language" && tag.id !== 17249) language += capped
+      // Tag id 17249 is "Translated" tag and it belongs to "language" type.
+    })
 
-    // Get the correct language code
-    let language: LanguageCode = LanguageCode.UNKNOWN
-    for (let item of $(".tag-container").toArray()) {
-      if ($(item).text().indexOf("Languages") > -1) {
-        let langs = $("span", item).text()
-
-        if (langs.includes("japanese")) {
-          language = LanguageCode.JAPANESE
-          break
-        } else if (langs.includes("english")) {
-          language = LanguageCode.ENGLISH
-          break
-        } else if (langs.includes("chinese")) {
-          language = LanguageCode.CHINEESE
-          break
-        }
-      }
-    }
-
-    chapters.push(
+    return [
       createChapter({
-        id: "1", // Only ever one chapter on this source
-        mangaId: mangaId,
-        name: title,
-        chapNum: 1,
-        time: time,
-        langCode: language,
-      })
-    )
-    return chapters
+        id: json.id.toString(),
+        name: json.title.pretty,
+        mangaId: json.media_id,
+        chapNum: 1, // No chapter clarification ┐('～`;)┌
+        group: json.scanlator ? json.scanlator : undefined,
+        langCode: this.convertLanguageToCode(language),
+        time: new Date(json.upload_date * 1000),
+      }),
+    ]
   }
 
   async getChapterDetails(
