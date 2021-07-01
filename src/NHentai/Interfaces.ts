@@ -9,7 +9,7 @@ export interface ImageObject {
   thumbnail: ImagePageObject
 }
 
-export interface TagObject {
+interface TagObject {
   id: number
   type:
     | "artist"

@@ -16,20 +16,19 @@ import {
   SourceInfo,
 } from "paperback-extensions-common"
 
-import { Response, TagObject, ImageObject } from "./interfaces"
+import { Response, ImageObject } from "./Interfaces"
 
 const NHENTAI_DOMAIN = "https://nhentai.net"
 const NHENTAI_API = (type: "gallery" | "galleries") =>
   NHENTAI_DOMAIN + "/api/" + type + "/"
 
-// Don't think about this too much, appends the missing letters to finish the ext. (￣ω￣)
+// Don't think about this too much, appends the missing letters to finish the extension. (￣ω￣)
 const TYPE = (type: string) => {
   if (type === "j") return type + "pg"
   if (type === "p") return type + "ng"
   else return type + "if"
 }
 
-// Check what type to return and returns images.
 const IMAGES = (
   images: ImageObject,
   media_Id: string,
@@ -55,7 +54,7 @@ const capitalize = (str: string) =>
     )[0]
 
 export const NHentaiInfo: SourceInfo = {
-  version: "2.0.2",
+  version: "2.1.0",
   name: "nHentai",
   description: `Extension which pulls 18+ content from nHentai. (Literally all of it. We know why you're here)`,
   author: `VibrantClouds`,
@@ -114,7 +113,7 @@ export class NHentai extends Source {
     let characters: Tag[] = []
     let tags: Tag[] = []
 
-    // Iterates over tags and check for types while pushing them to related arrays.
+    // Iterates over tags and check for types while pushing them to the related arrays.
     json.tags.forEach((tag) => {
       const capped = capitalize(tag.name)
 
@@ -126,40 +125,24 @@ export class NHentai extends Source {
       else tags.push(createTag({ id: tag.id.toString(), label: capped }))
     })
 
-    let TagSections: TagSection[] = []
-
-    // Useless category if nothing exists ┐(￣ヘ￣;)┌
-    if (!characters.length)
-      TagSections.push(
-        {
-          id: "category",
-          label: "Categories",
-          tags: categories,
-        },
-        {
-          id: "tags",
-          label: "Tags",
-          tags: tags,
-        }
-      )
-    else
-      TagSections.push(
-        {
-          id: "category",
-          label: "Categories",
-          tags: categories,
-        },
-        {
-          id: "characters",
-          label: "Characters",
-          tags: characters,
-        },
-        {
-          id: "tags",
-          label: "Tags",
-          tags: tags,
-        }
-      )
+    let TagSections: TagSection[] = [
+      createTagSection({
+        id: "category",
+        label: "Categories",
+        tags: categories,
+      }),
+      createTagSection({
+        id: "characters",
+        label: "Characters",
+        tags: characters,
+      }),
+      createTagSection({
+        id: "tags",
+        label: "Tags",
+        tags: tags,
+      }),
+    ]
+    if (!characters.length) TagSections.splice(1, 1) // Removes character from TagSection if characters[].length is 0
 
     return createManga({
       id: json.id.toString(),
@@ -168,86 +151,11 @@ export class NHentai extends Source {
       rating: 0,
       status: 1,
       artist: artist.join(", "),
+      author: artist.join(", "),
       tags: TagSections,
       hentai: false,
     })
   }
-
-  /*
-   */
-  // async getMangaDetails(mangaId: string): Promise<Manga> {
-  //   const request = createRequestObject({
-  //     url: `${NHENTAI_DOMAIN}/g/${mangaId}`,
-  //     method: "GET",
-  //   })
-
-  //   let data = await this.requestManager.schedule(request, 1)
-
-  //   let $ = this.cheerio.load(data.data)
-  //   let info = $("[itemprop=name]")
-  //   let image = $("[itemprop=image]").attr("content") ?? ""
-  //   let title = $("[itemprop=name]").attr("content") ?? ""
-
-  //   // Comma seperate all of the tags and store them in our tag section
-  //   let tagSections: TagSection[] = [
-  //     createTagSection({ id: "0", label: "tag", tags: [] }),
-  //   ]
-  //   let tags =
-  //     $('meta[name="twitter:description"]').attr("content")?.split(",") ?? []
-  //   tagSections[0].tags = tags.map((elem: string) =>
-  //     createTag({ id: elem.trim(), label: elem.trim() })
-  //   )
-
-  //   // Clean up the title by removing all metadata, these are items enclosed within [ ] brackets
-  //   title = title.replace(/(\[.+?\])/g, "").trim()
-
-  //   // Grab the alternative titles
-  //   let titles = [title]
-  //   let altTitleBlock = $("#info")
-  //   let altNameTop = $("h1", altTitleBlock).text() ?? ""
-  //   let altNameBottom = $("h2", altTitleBlock).text() ?? ""
-  //   if (altNameTop) {
-  //     titles.push(altNameTop.trim())
-  //   }
-  //   if (altNameBottom) {
-  //     titles.push(altNameBottom.trim())
-  //   }
-
-  //   // Get the artist and language information
-  //   let context = $("#info-block")
-  //   let artist = ""
-  //   let language = ""
-  //   for (let item of $(".tag-container", context).toArray()) {
-  //     if ($(item).text().indexOf("Artists") > -1) {
-  //       let temp = $("a", item).text()
-  //       artist = temp.substring(0, temp.search(/\d/))
-  //     } else if ($(item).text().indexOf("Languages") > -1) {
-  //       let temp = $("a", item)
-  //       if (temp.toArray().length > 1) {
-  //         let temptext = $(temp.toArray()[1]).text()
-  //         language = temptext.substring(0, temptext.indexOf(" ("))
-  //       } else {
-  //         let temptext = temp.text()
-  //         language = temptext.substring(0, temptext.indexOf(" ("))
-  //       }
-  //     }
-  //   }
-
-  //   let status = 1
-  //   let hentai = true // I'm assuming that's why you're here!
-
-  //   return createManga({
-  //     id: mangaId,
-  //     titles: titles,
-  //     image: image,
-  //     rating: 0,
-  //     status: status,
-  //     artist: artist,
-  //     tags: tagSections,
-  //     //hentai: hentai
-  //     hentai: false,
-  //   })
-  // }
 
   async getChapters(mangaId: string): Promise<Chapter[]> {
     const request = createRequestObject({
