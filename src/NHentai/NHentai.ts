@@ -29,20 +29,18 @@ const TYPE = (type: string) => {
   else return type + "if"
 }
 
-const IMAGES = (
-  images: ImageObject,
-  media_Id: string,
-  type: "page" | "thumb"
-) => {
-  if (type === "page")
+const IMAGES = (images: ImageObject, media_Id: string, page: boolean) => {
+  if (page == true)
     return images.pages.map(
       (page, i) =>
         `https://i.nhentai.net/galleries/${media_Id}/${[i + 1]}.${TYPE(page.t)}`
     )
   else
-    return `https://t.nhentai.net/galleries/${media_Id}/1t.${TYPE(
-      images.thumbnail.t
-    )}`
+    return [
+      `https://t.nhentai.net/galleries/${media_Id}/1t.${TYPE(
+        images.thumbnail.t
+      )}`,
+    ]
 }
 // Makes the first letter of a string capital.
 const capitalize = (str: string) =>
@@ -149,7 +147,7 @@ export class NHentai extends Source {
     return createManga({
       id: json.id.toString(),
       titles: [json.title.pretty, json.title.english, json.title.japanese],
-      image: IMAGES(json.images, json.media_id, "thumb").toString(), // Type checking problem... 	(--_--)
+      image: IMAGES(json.images, json.media_id, false)[0], // Type checking problem... 	(--_--)
       rating: 0,
       status: 1,
       artist: artist.join(", "),
@@ -160,7 +158,7 @@ export class NHentai extends Source {
   }
 
   async getChapters(mangaId: string): Promise<Chapter[]> {
-    const methodName = this.getMangaDetails.name
+    const methodName = this.getChapters.name
 
     const request = createRequestObject({
       url: NHENTAI_API("gallery") + mangaId,
@@ -206,46 +204,44 @@ export class NHentai extends Source {
 
   async getChapterDetails(
     mangaId: string,
-    chapterId: string
+    chapterId?: string
   ): Promise<ChapterDetails> {
+    const methodName = this.getChapterDetails.name
+
     const request = createRequestObject({
-      url: `${NHENTAI_DOMAIN}/g/${mangaId}`,
+      url: NHENTAI_API("gallery") + mangaId,
       method: "GET",
+      headers: {
+        "accept-encoding": "application/json",
+      },
     })
-    let data = await this.requestManager.schedule(request, 1)
-    let $ = this.cheerio.load(data.data)
 
-    // Get the number of chapters, we can generate URLs using that as a basis
-    let pages: string[] = []
-    let thumbContainer = $("#thumbnail-container")
-    let numChapters = $(".thumb-container", thumbContainer).length
-
-    // Get the gallery number that it is assigned to
-    let gallerySrc = $("img", thumbContainer).attr("data-src")
-
-    // We can regular expression match out the gallery ID from this string
-    let galleryId = parseInt(gallerySrc?.match(/.*\/(\d*)\//)![1]!)
-
-    // Get all of the pages
-    let counter = 1
-    for (let obj of $($("img", ".thumb-container")).toArray()) {
-      let imageType = $(obj)
-        .attr("data-src")
-        ?.match(/\.([png|jpg]{3,3})/g)![0]
-      pages.push(
-        `https://i.nhentai.net/galleries/${galleryId}/${counter}${imageType}`
+    const response = await this.requestManager.schedule(request, 1)
+    if (response.status > 400)
+      throw new Error(
+        `Failed to fetch data on ${methodName} with status code: ` +
+          response.status
       )
-      counter++
-    }
 
-    let chapterDetails = createChapterDetails({
-      id: chapterId,
-      mangaId: mangaId,
-      pages: pages,
+    const json: Response =
+      typeof response.data !== "object"
+        ? JSON.parse(response.data)
+        : response.data
+    if (!json) throw new Error(`Failed to parse response on ${methodName}`)
+
+    // Need to use chapterId for some reason 	╮(︶︿︶)╭
+    if (!chapterId) chapterId = json.media_id
+    if (json.media_id !== chapterId)
+      throw new Error(
+        `Requested chapterId is different that what it should be. ${methodName}`
+      )
+
+    return createChapterDetails({
+      id: json.media_id,
+      mangaId: json.id.toString(),
+      pages: IMAGES(json.images, json.media_id, true),
       longStrip: false,
     })
-
-    return chapterDetails
   }
 
   async searchRequest(
