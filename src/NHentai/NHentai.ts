@@ -8,8 +8,6 @@ import {
   SearchRequest,
   LanguageCode,
   TagSection,
-  Request,
-  SourceTag,
   Tag,
   TagType,
   PagedResults,
@@ -70,7 +68,9 @@ export class NHentai extends Source {
     if (response.status > 400)
       throw new Error(
         `Failed to fetch data on ${methodName} with status code: ` +
-          response.status
+          response.status +
+          ". Request URL: " +
+          request.url
       )
 
     const json: Response =
@@ -116,7 +116,8 @@ export class NHentai extends Source {
         tags: tags,
       }),
     ]
-    if (!characters.length) TagSections.splice(1, 1) // Removes character from TagSection if characters[].length is 0
+    if (!characters.length) TagSections.splice(1, 1) // Removes characters from TagSection if it's empty.
+    if (!categories.length) TagSections.splice(0, 1) // Removes categories from TagSection if it's empty.
 
     return createManga({
       id: json.id.toString(),
@@ -126,8 +127,8 @@ export class NHentai extends Source {
       status: 1,
       artist: artist.join(", "),
       author: artist.join(", "),
-      tags: TagSections,
       hentai: false,
+      tags: TagSections,
     })
   }
 
@@ -146,7 +147,9 @@ export class NHentai extends Source {
     if (response.status > 400)
       throw new Error(
         `Failed to fetch data on ${methodName} with status code: ` +
-          response.status
+          response.status +
+          ". Request URL: " +
+          request.url
       )
 
     const json: Response =
@@ -165,9 +168,9 @@ export class NHentai extends Source {
 
     return [
       createChapter({
-        id: json.id.toString(),
+        id: json.media_id,
         name: json.title.pretty,
-        mangaId: json.media_id,
+        mangaId: json.id.toString(),
         chapNum: 1, // No chapter clarification ┐('～`;)┌
         group: json.scanlator ? json.scanlator : undefined,
         langCode: this.convertLanguageToCode(language),
@@ -194,7 +197,9 @@ export class NHentai extends Source {
     if (response.status > 400)
       throw new Error(
         `Failed to fetch data on ${methodName} with status code: ` +
-          response.status
+          response.status +
+          ". Request URL: " +
+          request.url
       )
 
     const json: Response =
@@ -224,8 +229,8 @@ export class NHentai extends Source {
   ): Promise<PagedResults> {
     const methodName = this.searchRequest.name
 
-    metadata = metadata ?? {}
-    let page = metadata.nextPage ?? 1
+    // Sets metadata if not available.
+    metadata = metadata ? metadata : { nextPage: 1 }
 
     // Returns an empty result if the page limit is passed.
     if (metadata.nextPage == undefined) {
@@ -241,7 +246,7 @@ export class NHentai extends Source {
         QUERY(
           query.title ? query.title : query.toString(),
           metadata.sort,
-          metadata.page
+          metadata.nextPage
         ),
       method: "GET",
       headers: {
@@ -253,7 +258,9 @@ export class NHentai extends Source {
     if (response.status > 400)
       throw new Error(
         `Failed to fetch data on ${methodName} with status code: ` +
-          response.status
+          response.status +
+          ". Request URL: " +
+          request.url
       )
 
     const json: QueryResponse =
@@ -268,14 +275,15 @@ export class NHentai extends Source {
         createMangaTile({
           id: result.id.toString(),
           title: createIconText({ text: result.title.pretty }),
-          image: IMAGES(result.images, result.media_id, false)[0],
+          image: IMAGES(result.images, result.media_id, false)[0], // Type checking problem... 	(--_--)
         })
       )
     })
 
-    if (page === json.num_pages) {
+    // If the limit is reached, sets `nextPage` to undefined so line: 236-242 can catch it.
+    if (metadata.nextPage === json.num_pages)
       metadata = { nextPage: undefined, maxPages: json.num_pages }
-    } else metadata = { nextPage: ++page, maxPages: json.num_pages }
+    else metadata = { nextPage: ++metadata.nextPage, maxPages: json.num_pages }
 
     return createPagedResults({
       results: cache,
