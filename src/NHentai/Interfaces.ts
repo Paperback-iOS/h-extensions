@@ -85,3 +85,19 @@ export interface Response {
    */
   num_favorites: number
 }
+
+export interface QueryResponse {
+  /**
+   * Array of {@link Response}
+   */
+  result: Response[]
+  /**
+   * Number of pages for this query.
+   * ``results = per_page * num_pages``
+   */
+  num_pages: number
+  /**
+   * Number of {@link Response} per page.
+   */
+  per_page: number
+}

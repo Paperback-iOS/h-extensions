@@ -16,40 +16,14 @@ import {
   SourceInfo,
 } from "paperback-extensions-common"
 
-import { Response, ImageObject } from "./Interfaces"
-
-const NHENTAI_DOMAIN = "https://nhentai.net"
-const NHENTAI_API = (type: "gallery" | "galleries") =>
-  NHENTAI_DOMAIN + "/api/" + type + "/"
-
-// Don't think about this too much, appends the missing letters to finish the extension. (￣ω￣)
-const TYPE = (type: string) => {
-  if (type === "j") return type + "pg"
-  if (type === "p") return type + "ng"
-  else return type + "if"
-}
-
-const IMAGES = (images: ImageObject, media_Id: string, page: boolean) => {
-  if (page == true)
-    return images.pages.map(
-      (page, i) =>
-        `https://i.nhentai.net/galleries/${media_Id}/${[i + 1]}.${TYPE(page.t)}`
-    )
-  else
-    return [
-      `https://t.nhentai.net/galleries/${media_Id}/1t.${TYPE(
-        images.thumbnail.t
-      )}`,
-    ]
-}
-// Makes the first letter of a string capital.
-const capitalize = (str: string) =>
-  str
-    .toString()
-    .split("_")
-    .map(
-      (word) => word.charAt(0).toUpperCase() + word.substring(1).toLowerCase()
-    )[0]
+import { Response, QueryResponse } from "./Interfaces"
+import {
+  NHENTAI_DOMAIN,
+  NHENTAI_API,
+  QUERY,
+  IMAGES,
+  capitalize,
+} from "./Functions"
 
 export const NHentaiInfo: SourceInfo = {
   version: "2.1.0",
@@ -248,103 +222,63 @@ export class NHentai extends Source {
     query: SearchRequest,
     metadata: any
   ): Promise<PagedResults> {
+    const methodName = this.searchRequest.name
+
     metadata = metadata ?? {}
-    let page = metadata.page ?? 1
-    let sixDigit: boolean = false
+    let page = metadata.nextPage ?? 1
 
-    // If h-sources are disabled for the search request, always return empty
-    if (query.hStatus === false || !query.title) {
-      // MARK: We only support title searches for now until advanced search is implemented
-      return createPagedResults({ results: [] })
-    }
-
-    let request: Request | undefined = undefined
-
-    // If the search query is a six digit direct link to a manga, create a request to just that URL and alert the handler via metadata
-    if (query.title?.match(/\d{5,6}/)) {
-      request = createRequestObject({
-        url: `${NHENTAI_DOMAIN}/g/${query.title}`,
-        method: "GET",
-      })
-      sixDigit = true
-    } else {
-      query.title = query.title?.trim()
-      query.title = query.title.replace(/ /g, "+") + "+"
-
-      request = createRequestObject({
-        url: `${NHENTAI_DOMAIN}/search/?q=${query.title}&page=${page}`,
-        method: "GET",
-      })
-      sixDigit = false
-    }
-
-    let data = await this.requestManager.schedule(request, 1)
-
-    let $ = this.cheerio.load(data.data)
-    let mangaTiles: MangaTile[] = []
-
-    // Was this a six digit request?
-    if (sixDigit) {
-      // Retrieve the ID from the body
-      let contextNode = $("#bigcontainer")
-      let href = $("a", contextNode).attr("href")
-
-      let mangaId = parseInt(href?.match(/g\/(\d*)\/\d/)![1]!)
-
-      let title = $("[itemprop=name]").attr("content") ?? ""
-
-      // Clean up the title by removing all metadata, these are items enclosed within [ ] brackets
-      title = title.replace(/(\[.+?\])/g, "").trim()
-
-      mangaTiles.push(
-        createMangaTile({
-          id: mangaId.toString(),
-          title: createIconText({ text: title }),
-          image: $("[itemprop=image]").attr("content") ?? "",
-        })
-      )
-
+    // Returns an empty result if the page limit is passed.
+    if (metadata.nextPage == undefined) {
       return createPagedResults({
-        results: mangaTiles,
+        results: [],
+        metadata: { nextPage: undefined, maxPages: metadata.maxPages },
       })
     }
 
-    let containerNode = $(".index-container")
-    for (let item of $(".gallery", containerNode).toArray()) {
-      let currNode = $(item)
-      let image = $("img", currNode).attr("data-src")!
+    const request = createRequestObject({
+      url:
+        NHENTAI_API("galleries") +
+        QUERY(
+          query.title ? query.title : query.toString(),
+          metadata.sort,
+          metadata.page
+        ),
+      method: "GET",
+      headers: {
+        "accept-encoding": "application/json",
+      },
+    })
 
-      // If image is undefined, we've hit a lazyload part of the website. Adjust the scraping to target the other features
-      if (image == undefined) {
-        image = "http:" + $("img", currNode).attr("src")!
-      }
+    const response = await this.requestManager.schedule(request, 1)
+    if (response.status > 400)
+      throw new Error(
+        `Failed to fetch data on ${methodName} with status code: ` +
+          response.status
+      )
 
-      let title = $(".caption", currNode).text()
-      let idHref = $("a", currNode)
-        .attr("href")
-        ?.match(/\/(\d*)\//)!
+    const json: QueryResponse =
+      typeof response.data !== "object"
+        ? JSON.parse(response.data)
+        : response.data
+    if (!json) throw new Error(`Failed to parse response on ${methodName}`)
 
-      // Clean up the title by removing all metadata, these are items enclosed within [ ] brackets
-      title = title.replace(/(\[.+?\])/g, "").trim()
-
-      mangaTiles.push(
+    let cache: MangaTile[] = []
+    json.result.forEach((result) => {
+      cache.push(
         createMangaTile({
-          id: idHref[1],
-          title: createIconText({ text: title }),
-          image: image,
+          id: result.id.toString(),
+          title: createIconText({ text: result.title.pretty }),
+          image: IMAGES(result.images, result.media_id, false)[0],
         })
       )
-    }
+    })
 
-    // Do we have any additional pages? If there is an `a.last` element, we do!
-    if ($("a.last")) {
-      metadata.page = ++page
-    } else {
-      metadata = undefined
-    }
+    if (page === json.num_pages) {
+      metadata = { nextPage: undefined, maxPages: json.num_pages }
+    } else metadata = { nextPage: ++page, maxPages: json.num_pages }
 
     return createPagedResults({
-      results: mangaTiles,
+      results: cache,
       metadata: metadata,
     })
   }
