@@ -53,9 +53,8 @@ export class NHentai extends Source {
     }
   }
 
-  async getMangaDetails(mangaId: string): Promise<Manga> {
-    const methodName = this.getMangaDetails.name
-
+  // Makes my life easy... ＼(≧▽≦)／
+  async getResponse(mangaId: any, methodName: string): Promise<Response> {
     const request = createRequestObject({
       url: NHENTAI_API("gallery") + mangaId,
       method: "GET",
@@ -79,7 +78,12 @@ export class NHentai extends Source {
         : response.data
     if (!json) throw new Error(`Failed to parse response on ${methodName}`)
 
-    // Regular Tags
+    return json
+  }
+
+  async getMangaDetails(mangaId: string): Promise<Manga> {
+    const json = await this.getResponse(mangaId, this.getMangaDetails.name)
+
     let artist: string[] = []
     let categories: Tag[] = []
     let characters: Tag[] = []
@@ -133,30 +137,7 @@ export class NHentai extends Source {
   }
 
   async getChapters(mangaId: string): Promise<Chapter[]> {
-    const methodName = this.getChapters.name
-
-    const request = createRequestObject({
-      url: NHENTAI_API("gallery") + mangaId,
-      method: "GET",
-      headers: {
-        "accept-encoding": "application/json",
-      },
-    })
-
-    const response = await this.requestManager.schedule(request, 1)
-    if (response.status > 400)
-      throw new Error(
-        `Failed to fetch data on ${methodName} with status code: ` +
-          response.status +
-          ". Request URL: " +
-          request.url
-      )
-
-    const json: Response =
-      typeof response.data !== "object"
-        ? JSON.parse(response.data)
-        : response.data
-    if (!json) throw new Error(`Failed to parse response on ${methodName}`)
+    const json = await this.getResponse(mangaId, this.getChapters.name)
 
     let language: string = ""
 
@@ -185,28 +166,7 @@ export class NHentai extends Source {
   ): Promise<ChapterDetails> {
     const methodName = this.getChapterDetails.name
 
-    const request = createRequestObject({
-      url: NHENTAI_API("gallery") + mangaId,
-      method: "GET",
-      headers: {
-        "accept-encoding": "application/json",
-      },
-    })
-
-    const response = await this.requestManager.schedule(request, 1)
-    if (response.status > 400)
-      throw new Error(
-        `Failed to fetch data on ${methodName} with status code: ` +
-          response.status +
-          ". Request URL: " +
-          request.url
-      )
-
-    const json: Response =
-      typeof response.data !== "object"
-        ? JSON.parse(response.data)
-        : response.data
-    if (!json) throw new Error(`Failed to parse response on ${methodName}`)
+    const json = await this.getResponse(mangaId, methodName)
 
     // Need to use chapterId for some reason 	╮(︶︿︶)╭
     if (!chapterId) chapterId = json.media_id
@@ -240,11 +200,37 @@ export class NHentai extends Source {
       })
     }
 
+    let title: string = ""
+
+    // On URL title becomes a nhentai id.
+    if (
+      query.title?.startsWith("https") ||
+      query.title?.startsWith("nhentai.net")
+    ) {
+      title = query.title.replace(/[^0-9]/g, "")
+    } else title += query.title
+
+    // If the query title is a number, search for the result that contains the number as it's id.
+    if (!isNaN(parseInt(title))) {
+      const response = await this.getResponse(title, methodName)
+
+      const result = createMangaTile({
+        id: response.id.toString(),
+        title: createIconText({ text: response.title.pretty }),
+        image: IMAGES(response.images, response.media_id, false)[0], // Type checking problem... 	(--_--)
+      })
+
+      return createPagedResults({
+        results: [result],
+        metadata: { nextPage: undefined, maxPages: 1 },
+      })
+    }
+
     const request = createRequestObject({
       url:
         NHENTAI_API("galleries") +
         QUERY(
-          query.title ? query.title : query.toString(),
+          title ? title : query.toString(),
           metadata.sort,
           metadata.nextPage
         ),
@@ -281,7 +267,7 @@ export class NHentai extends Source {
     })
 
     // If the limit is reached, sets `nextPage` to undefined so line: 236-242 can catch it.
-    if (metadata.nextPage === json.num_pages)
+    if (metadata.nextPage === json.num_pages || json.num_pages === 0)
       metadata = { nextPage: undefined, maxPages: json.num_pages }
     else metadata = { nextPage: ++metadata.nextPage, maxPages: json.num_pages }
 
