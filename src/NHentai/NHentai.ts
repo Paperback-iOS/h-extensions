@@ -19,7 +19,7 @@ import { Response, QueryResponse, RequestMetadata } from "./Interfaces"
 import { NHENTAI_DOMAIN, QUERY, TYPE, PAGES, capitalize } from "./Functions"
 
 export const NHentaiInfo: SourceInfo = {
-  version: "2.1.1",
+  version: "2.2.0",
   name: "nHentai",
   description: `Extension which pulls 18+ content from nHentai. (Literally all of it. We know why you're here)`,
   author: `VibrantClouds`,
