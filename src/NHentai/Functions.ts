@@ -10,7 +10,7 @@ export const QUERY = (
 	page?: number
 ): string =>
 	`${NHENTAI_DOMAIN}/api/galleries/search?query=${query ? query : ''}&sort=${
-		sort ? sort : 'popular'
+		sort ? sort : ''
 	}&page=${page ? page : 1}`
 
 // Don't think about this too much, appends the missing letters to finish the extension. (￣ω￣)
