@@ -75,6 +75,35 @@ export class NHentai extends Source {
     return json
   }
 
+  async getResponseArray(
+    query: string,
+    sort: "" | "popular-today" | "popular-week" | "popular",
+    page: number,
+    methodName: string
+  ): Promise<QueryResponse> {
+    const request = createRequestObject({
+      url: QUERY(query, sort, page),
+      method: "GET",
+      headers: {
+        "accept-encoding": "application/json",
+      },
+    })
+
+    const response = await this.requestManager.schedule(request, 1)
+    if (response.status > 400)
+      throw new Error(
+        `Failed to fetch data on ${methodName} with status code: ` +
+          `${response.status}. Request URL: ${request.url}`
+      )
+
+    const json: QueryResponse =
+      typeof response.data !== "object"
+        ? JSON.parse(response.data)
+        : response.data
+    if (!json) throw new Error(`Failed to parse response on ${methodName}`)
+
+    return json
+  }
   async getMangaDetails(mangaId: string): Promise<Manga> {
     const json = await this.getResponse(mangaId, this.getMangaDetails.name)
 
@@ -240,26 +269,12 @@ export class NHentai extends Source {
       })
     }
 
-    const request = createRequestObject({
-      url: QUERY(title, metadata.sort, metadata.nextPage),
-      method: "GET",
-      headers: {
-        "accept-encoding": "application/json",
-      },
-    })
-
-    const response = await this.requestManager.schedule(request, 1)
-    if (response.status > 400)
-      throw new Error(
-        `Failed to fetch data on ${methodName} with status code: ` +
-          `${response.status}. Request URL: ${request.url}`
-      )
-
-    const json: QueryResponse =
-      typeof response.data !== "object"
-        ? JSON.parse(response.data)
-        : response.data
-    if (!json) throw new Error(`Failed to parse response on ${methodName}`)
+    const json = await this.getResponseArray(
+      title,
+      metadata.sort,
+      metadata.nextPage,
+      methodName
+    )
 
     const cache: MangaTile[] = json.result.map((result) => {
       let language = ""
@@ -303,150 +318,132 @@ export class NHentai extends Source {
   async getHomePageSections(
     sectionCallback: (section: HomeSection) => void
   ): Promise<void> {
-    const [popular, newUploads] = [
+    const methodName = this.getHomePageSections.name
+
+    const [popular, latest] = [
       createHomeSection({
         id: "popular",
         title: "Popular Now",
-        view_more: false,
+        view_more: true,
       }),
       createHomeSection({
-        id: "new",
+        id: "latest",
         title: "New Uploads",
         view_more: true,
       }),
     ]
     sectionCallback(popular)
-    sectionCallback(newUploads)
+    sectionCallback(latest)
 
-    const request = createRequestObject({
-      url: `${NHENTAI_DOMAIN}`,
-      method: "GET",
+    /* prettier-ignore */ /* eslint-ignore */
+    const popularResponse = await this.getResponseArray("'", "popular-today", 1, methodName)
+    popular.items = popularResponse.result.map((result) => {
+      let language = ""
+      result.tags.forEach((tag) => {
+        if (tag.type === "language" && tag.id !== 17249)
+          return (language += capitalize(tag.name))
+        // Tag id 17249 is "Translated" tag and it belongs to "language" type.
+        else return
+      })
+
+      return createMangaTile({
+        id: result.id.toString(),
+        title: createIconText({ text: result.title.pretty }),
+        image:
+          "https://t.nhentai.net/galleries/" +
+          result.media_id +
+          `/1t.${TYPE(result.images.thumbnail.t)}`,
+        subtitleText: createIconText({ text: language }),
+      })
     })
-
-    const response = await this.requestManager.schedule(request, 1)
-    if (response.status > 400)
-      throw new Error(
-        `Failed to fetch data on ${this.getHomePageSections.name} with status code: ` +
-          `${response.status}. Request URL: ${request.url}`
-      )
-
-    const popularHentai: MangaTile[] = []
-    const newHentai: MangaTile[] = []
-    const $ = this.cheerio.load(response.data)
-
-    let containerNode = $(".index-container").first()
-    for (const item of $(".gallery", containerNode).toArray()) {
-      const currNode = $(item)
-
-      // If image is undefined, we've hit a lazyload part of the website. Adjust the scraping to target the other features
-      let image = $("img", currNode).attr("data-src")
-      if (image == undefined) image = "http:" + $("img", currNode).attr("src")
-
-      // Clean up the title by removing all metadata, these are items enclosed within [ ] brackets
-      const title: string = $(".caption", currNode)
-        .text()
-        .replace(/(\[.+?\])/g, "")
-        .trim()
-
-      const idHref: string = $("a", currNode)
-        .attr("href")!
-        .match(/\/(\d*)\//)![1]
-
-      popularHentai.push(
-        createMangaTile({
-          id: idHref,
-          title: createIconText({ text: title }),
-          image: image,
-        })
-      )
-    }
-    popular.items = popularHentai
     sectionCallback(popular)
 
-    containerNode = $(".index-container").last()
-    for (const item of $(".gallery", containerNode).toArray()) {
-      const currNode = $(item)
+    const latestResponse = await this.getResponseArray("'", "", 1, methodName)
+    latest.items = latestResponse.result.map((result) => {
+      let language = ""
+      result.tags.forEach((tag) => {
+        if (tag.type === "language" && tag.id !== 17249)
+          return (language += capitalize(tag.name))
+        // Tag id 17249 is "Translated" tag and it belongs to "language" type.
+        else return
+      })
 
-      // If image is undefined, we've hit a lazyload part of the website. Adjust the scraping to target the other features
-      let image = $("img", currNode).attr("data-src")
-      if (image == undefined) image = "http:" + $("img", currNode).attr("src")
-
-      // Clean up the title by removing all metadata, these are items enclosed within [ ] brackets
-      const title: string = $(".caption", currNode)
-        .text()
-        .replace(/(\[.+?\])/g, "")
-        .trim()
-
-      const idHref: string = $("a", currNode)
-        .attr("href")!
-        .match(/\/(\d*)\//)![1]
-
-      newHentai.push(
-        createMangaTile({
-          id: idHref,
-          title: createIconText({ text: title }),
-          image: image,
-        })
-      )
-    }
-    newUploads.items = newHentai
-    sectionCallback(newUploads)
+      return createMangaTile({
+        id: result.id.toString(),
+        title: createIconText({ text: result.title.pretty }),
+        image:
+          "https://t.nhentai.net/galleries/" +
+          result.media_id +
+          `/1t.${TYPE(result.images.thumbnail.t)}`,
+        subtitleText: createIconText({ text: language }),
+      })
+    })
+    sectionCallback(latest)
   }
 
   async getViewMoreItems(
     homepageSectionId: string,
     metadata: RequestMetadata
   ): Promise<PagedResults> {
-    metadata = metadata ?? { nextPage: 1 }
-    if (homepageSectionId == undefined || metadata.nextPage === undefined)
-      return createPagedResults({ results: [], metadata })
+    const methodName = this.searchRequest.name
 
-    // This function only works for New Uploads, no need to check the section ID
-    const request = createRequestObject({
-      url: `${NHENTAI_DOMAIN}/?page=${metadata.nextPage}`,
-      method: "GET",
-    })
-    const data = await this.requestManager.schedule(request, 1)
+    switch (homepageSectionId) {
+      case "popular":
+        metadata = metadata ? metadata : { nextPage: 1, sort: "popular-today" }
 
-    const $ = this.cheerio.load(data.data)
-
-    const discoveredObjects: MangaTile[] = []
-
-    const containerNode = $(".index-container")
-    for (const item of $(".gallery", containerNode).toArray()) {
-      const currNode = $(item)
-
-      let image = $("img", currNode).attr("data-src")
-      // If image is undefined, we've hit a lazyload part of the website. Adjust the scraping to target the other features
-      if (image == undefined) {
-        image = "http:" + $("img", currNode).attr("src")
-      }
-
-      // Clean up the title by removing all metadata, these are items enclosed within [ ] brackets
-      const title: string = $(".caption", currNode)
-        .text()
-        .replace(/(\[.+?\])/g, "")
-        .trim()
-
-      const idHref: string = $("a", currNode)
-        .attr("href")!
-        .match(/\/(\d*)\//)![1]
-
-      discoveredObjects.push(
-        createMangaTile({
-          id: idHref,
-          title: createIconText({ text: title }),
-          image: image,
-        })
-      )
+      case "latest":
+        metadata = metadata ? metadata : { nextPage: 1, sort: "" }
     }
 
-    // Do we have any additional pages? If there is an `a.last` element, we do!
-    if ($("a.last")) metadata.nextPage = ++metadata.nextPage
-    else metadata.nextPage = undefined
+    // Returns an empty result if the page limit is passed.
+    if (metadata.nextPage == undefined)
+      return createPagedResults({
+        results: [],
+        metadata: { nextPage: undefined, maxPages: metadata.maxPages },
+      })
+
+    const json = await this.getResponseArray(
+      "'",
+      metadata.sort,
+      metadata.nextPage,
+      methodName
+    )
+
+    const cache: MangaTile[] = json.result.map((result) => {
+      let language = ""
+      result.tags.forEach((tag) => {
+        if (tag.type === "language" && tag.id !== 17249)
+          return (language += capitalize(tag.name))
+        // Tag id 17249 is "Translated" tag and it belongs to "language" type.
+        else return
+      })
+
+      return createMangaTile({
+        id: result.id.toString(),
+        title: createIconText({ text: result.title.pretty }),
+        image:
+          "https://t.nhentai.net/galleries/" +
+          result.media_id +
+          `/1t.${TYPE(result.images.thumbnail.t)}`, // Type checking problem... 	(--_--)
+        subtitleText: createIconText({ text: language }),
+      })
+    })
+
+    if (metadata.nextPage === json.num_pages || json.num_pages === 0)
+      metadata = {
+        nextPage: undefined,
+        maxPages: json.num_pages,
+        sort: metadata.sort,
+      }
+    else
+      metadata = {
+        nextPage: ++metadata.nextPage,
+        maxPages: json.num_pages,
+        sort: metadata.sort,
+      }
 
     return createPagedResults({
-      results: discoveredObjects,
+      results: cache,
       metadata: metadata,
     })
   }
