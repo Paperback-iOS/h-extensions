@@ -215,6 +215,14 @@ export class NHentai extends Source {
     if (!isNaN(parseInt(title))) {
       const response = await this.getResponse(title, methodName)
 
+      let language = ""
+      response.tags.forEach((tag) => {
+        if (tag.type === "language" && tag.id !== 17249)
+          return (language += capitalize(tag.name))
+        // Tag id 17249 is "Translated" tag and it belongs to "language" type.
+        else return
+      })
+
       return createPagedResults({
         results: [
           createMangaTile({
@@ -223,6 +231,7 @@ export class NHentai extends Source {
             image: `https://t.nhentai.net/galleries/${
               response.media_id
             }/1t.${TYPE(response.images.thumbnail.t)}`,
+            subtitleText: createIconText({ text: language }),
           }),
         ],
         metadata: { nextPage: undefined, maxPages: 1 },
@@ -250,15 +259,24 @@ export class NHentai extends Source {
         : response.data
     if (!json) throw new Error(`Failed to parse response on ${methodName}`)
 
-    const cache: MangaTile[] = json.result.map((result) =>
-      createMangaTile({
+    const cache: MangaTile[] = json.result.map((result) => {
+      let language = ""
+      result.tags.forEach((tag) => {
+        if (tag.type === "language" && tag.id !== 17249)
+          return (language += capitalize(tag.name))
+        // Tag id 17249 is "Translated" tag and it belongs to "language" type.
+        else return
+      })
+
+      return createMangaTile({
         id: result.id.toString(),
         title: createIconText({ text: result.title.pretty }),
         image: `https://t.nhentai.net/galleries/${result.media_id}/1t.${TYPE(
           result.images.thumbnail.t
         )}`, // Type checking problem... 	(--_--)
+        subtitleText: createIconText({ text: language }),
       })
-    )
+    })
 
     if (metadata.nextPage === json.num_pages || json.num_pages === 0)
       metadata = {
