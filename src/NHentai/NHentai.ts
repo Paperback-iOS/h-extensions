@@ -19,7 +19,7 @@ import { Response, QueryResponse, RequestMetadata } from './Interfaces'
 import { NHENTAI_DOMAIN, QUERY, TYPE, PAGES, capitalize } from './Functions'
 
 export const NHentaiInfo: SourceInfo = {
-	version: '2.2.1',
+	version: '2.2.2',
 	name: 'nHentai',
 	description: `Extension which pulls 18+ content from nHentai. (Literally all of it. We know why you're here)`,
 	author: `VibrantClouds`,
@@ -83,21 +83,24 @@ export class NHentai extends Source {
 
 		// Iterates over tags and check for types while pushing them to the related arrays.
 		json.tags.forEach((tag) => {
-			if (!tag.type || !tag.name || tag.type === 'language') return
-			// Return on undefined and language is not a tag.
-			else if (tag.type === 'artist') return artist.push(capitalize(tag.name))
-			else if (tag.type === 'category')
-				return categories.push(
-					createTag({ id: tag.id.toString(), label: capitalize(tag.name) })
-				)
-			else if (tag.type === 'character')
-				return characters.push(
-					createTag({ id: tag.id.toString(), label: capitalize(tag.name) })
-				)
-			else
-				return tags.push(
-					createTag({ id: tag.id.toString(), label: capitalize(tag.name) })
-				)
+			switch (tag.type) {
+				case 'artist':
+					return artist.push(capitalize(tag.name))
+				case 'category':
+					return categories.push(
+						createTag({ id: tag.id.toString(), label: capitalize(tag.name) })
+					)
+				case 'character':
+					return characters.push(
+						createTag({ id: tag.id.toString(), label: capitalize(tag.name) })
+					)
+				case 'language':
+					return
+				default:
+					return tags.push(
+						createTag({ id: tag.id.toString(), label: capitalize(tag.name) })
+					)
+			}
 		})
 
 		const TagSections: TagSection[] = []
