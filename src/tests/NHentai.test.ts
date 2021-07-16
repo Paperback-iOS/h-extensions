@@ -49,7 +49,7 @@ describe('N-Hentai Tests', function () {
 
     it("Searching for Manga With Multiple Keywords", async () => {
         let testSearch = createSearchRequest({
-            title: 'female bikini',
+            title: 'sole female bikini -rape',
         });
 
         let search = await wrapper.searchRequest(source, testSearch);

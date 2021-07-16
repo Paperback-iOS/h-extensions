@@ -142,7 +142,7 @@ export const parseMangaDetails = ($: CheerioStatic, mangaId: string): Manga => {
             relatedIds.push(mangaLink.split("/").reverse()[1] ?? "");
         }
     }
-    if (!titles || !status) throw new Error("An error occured while parsing the requested manga");
+    if (!titles) throw new Error("An error occurred while parsing the requested manga");
 
     return createManga({
         id: mangaId,
@@ -227,7 +227,7 @@ export const parseChapterDetails = ($: CheerioStatic, mangaId: string, chapterId
     for (const img of $("img", container).toArray()) {
         pages.push(encodeURI(getImageSrc($(img))));
     }
-    if (!pages ) throw new Error("An error occured while parsing pages for this chapter");
+    if (!pages ) throw new Error("An error occurred while parsing pages for this chapter");
     return createChapterDetails({
         id: chapterId,
         mangaId: mangaId,

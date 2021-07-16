@@ -4,7 +4,7 @@ import { isLastPage, parseChapterDetails, parseChapters, parseHomeSections, pars
 const MRM_DOMAIN = "https://myreadingmanga.info";
 
 export const MyReadingMangaInfo: SourceInfo = {
-    version: "1.0.1",
+    version: "1.0.2",
     name: "MyReadingManga",
     icon: "icon.png",
     author: "Ankah",
