@@ -18,6 +18,8 @@ import { Response, QueryResponse, RequestMetadata } from "./Interfaces"
 
 import { NHENTAI_DOMAIN, QUERY, TYPE, PAGES, capitalize } from "./Functions"
 
+import { URLBuilder } from "./NHentaiHelper"
+
 export const NHentaiInfo: SourceInfo = {
   version: "2.2.2",
   name: "nHentai",
@@ -52,7 +54,11 @@ export class NHentai extends Source {
   // Makes my life easy... ＼(≧▽≦)／
   async getResponse(mangaId: string, methodName: string): Promise<Response> {
     const request = createRequestObject({
-      url: NHENTAI_DOMAIN + "/api/gallery/" + mangaId,
+      url: new URLBuilder(NHENTAI_DOMAIN)
+        .addPathComponent("api")
+        .addPathComponent("gallery")
+        .addPathComponent(mangaId)
+        .buildUrl(),
       method: "GET",
       headers: {
         "accept-encoding": "application/json",
@@ -82,7 +88,14 @@ export class NHentai extends Source {
     methodName: string
   ): Promise<QueryResponse> {
     const request = createRequestObject({
-      url: QUERY(query, sort, page),
+      url: new URLBuilder(NHENTAI_DOMAIN)
+        .addPathComponent("api")
+        .addPathComponent("galleries")
+        .addPathComponent("search")
+        .addQueryParameter("query", encodeURI(query))
+        .addQueryParameter("page", page)
+        .addQueryParameter("sort", sort)
+        .buildUrl(),
       method: "GET",
       headers: {
         "accept-encoding": "application/json",
@@ -104,6 +117,7 @@ export class NHentai extends Source {
 
     return json
   }
+
   async getMangaDetails(mangaId: string): Promise<Manga> {
     const json = await this.getResponse(mangaId, this.getMangaDetails.name)
 
@@ -449,6 +463,9 @@ export class NHentai extends Source {
   }
 
   getMangaShareUrl(mangaId: string): string {
-    return "https://nhentai.net/g/" + mangaId
+    return new URLBuilder(NHENTAI_DOMAIN)
+      .addPathComponent("g")
+      .addPathComponent(mangaId)
+      .buildUrl()
   }
 }
