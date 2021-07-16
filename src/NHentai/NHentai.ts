@@ -134,9 +134,10 @@ export class NHentai extends Source {
     return createManga({
       id: json.id.toString(),
       titles: [json.title.pretty, json.title.english, json.title.japanese],
-      image: `https://t.nhentai.net/galleries/${json.media_id}/1t.${TYPE(
-        json.images.thumbnail.t
-      )}`,
+      image:
+        "https://t.nhentai.net/galleries/" +
+        json.media_id +
+        `/1t.${TYPE(json.images.thumbnail.t)}`,
       rating: 0,
       status: 1,
       artist: artist.join(", "),
@@ -228,9 +229,10 @@ export class NHentai extends Source {
           createMangaTile({
             id: response.id.toString(),
             title: createIconText({ text: response.title.pretty }),
-            image: `https://t.nhentai.net/galleries/${
-              response.media_id
-            }/1t.${TYPE(response.images.thumbnail.t)}`,
+            image:
+              "https://t.nhentai.net/galleries/" +
+              response.media_id +
+              `/1t.${TYPE(response.images.thumbnail.t)}`,
             subtitleText: createIconText({ text: language }),
           }),
         ],
@@ -271,9 +273,10 @@ export class NHentai extends Source {
       return createMangaTile({
         id: result.id.toString(),
         title: createIconText({ text: result.title.pretty }),
-        image: `https://t.nhentai.net/galleries/${result.media_id}/1t.${TYPE(
-          result.images.thumbnail.t
-        )}`, // Type checking problem... 	(--_--)
+        image:
+          "https://t.nhentai.net/galleries/" +
+          result.media_id +
+          `/1t.${TYPE(result.images.thumbnail.t)}`, // Type checking problem... 	(--_--)
         subtitleText: createIconText({ text: language }),
       })
     })
