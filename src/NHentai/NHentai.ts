@@ -204,16 +204,14 @@ export class NHentai extends Source {
       })
 
     let title = ""
+    const queryTitle = query.title!
+
     // On URL title becomes a nhentai id.
-    if (
-      query.title?.startsWith("https") ||
-      query.title?.startsWith("nhentai.net")
-    )
-      title += query.title.replace(/[^0-9]/g, "")
+    if (queryTitle.startsWith("https") || queryTitle.startsWith("nhentai.net"))
+      title += queryTitle.replace(/[^0-9]/g, "")
     else title += query.title
 
     // If the query title is a number, returns the result with that number as it's id.
-    // Could use typeof here but idk.
     if (!isNaN(parseInt(title))) {
       const response = await this.getResponse(title, methodName)
 
