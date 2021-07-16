@@ -232,11 +232,7 @@ export class NHentai extends Source {
     }
 
     const request = createRequestObject({
-      url: QUERY(
-        encodeURI(title),
-        metadata.sort ? metadata.sort : "",
-        metadata.nextPage
-      ), // If in the future sort becomes a thing.
+      url: QUERY(title, metadata.sort, metadata.nextPage),
       method: "GET",
       headers: {
         "accept-encoding": "application/json",

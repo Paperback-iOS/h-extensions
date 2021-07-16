@@ -3,15 +3,20 @@ import { ImageObject } from "./Interfaces"
 // Exports
 export const NHENTAI_DOMAIN = "https://nhentai.net"
 
-// Makes a request into a url format.
+/**
+ * Creates a `search` endpoint based url
+ * https://nhentai.net/api/galleries/search
+ */
 export const QUERY = (
-  query?: string,
-  sort?: "popular-today" | "popular-week" | "popular" | "",
-  page?: number
+  query: string,
+  sort: "popular-today" | "popular-week" | "popular" | "",
+  page: number
 ): string =>
-  `${NHENTAI_DOMAIN}/api/galleries/search?query=${query ? query : ""}&sort=${
-    sort ? sort : ""
-  }&page=${page ? page : 1}`
+  NHENTAI_DOMAIN +
+  "/api/galleries/search?" +
+  `query=${encodeURI(query)}` +
+  `&page=${page}` +
+  `&sort=${sort}`
 
 // Don't think about this too much, appends the missing letters to finish the extension. (￣ω￣)
 export const TYPE = (type: string): string => {
