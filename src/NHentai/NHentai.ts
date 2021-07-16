@@ -191,7 +191,7 @@ export class NHentai extends Source {
     const methodName = this.searchRequest.name
 
     // Sets metadata if not available.
-    metadata = metadata ? metadata : { nextPage: 1, sort: "popular" }
+    metadata = metadata ? metadata : { nextPage: 1, sort: "latest" }
 
     // Returns an empty result if the page limit is passed.
     if (metadata.nextPage == undefined)
@@ -231,7 +231,7 @@ export class NHentai extends Source {
     const request = createRequestObject({
       url: QUERY(
         encodeURI(title),
-        metadata.sort ? metadata.sort : "popular",
+        metadata.sort ? metadata.sort : "latest",
         metadata.nextPage
       ), // If in the future sort becomes a thing.
       method: "GET",
