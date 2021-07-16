@@ -6,7 +6,6 @@ import {
   HomeSection,
   MangaTile,
   SearchRequest,
-  LanguageCode,
   TagSection,
   Tag,
   TagType,
@@ -15,10 +14,9 @@ import {
 } from "paperback-extensions-common"
 
 import { Response, QueryResponse, RequestMetadata } from "./Interfaces"
+import { URLBuilder, Helper } from "./NHentaiHelper"
 
-import { NHENTAI_DOMAIN, QUERY, TYPE, PAGES, capitalize } from "./Functions"
-
-import { URLBuilder } from "./NHentaiHelper"
+const NHENTAI_DOMAIN = "https://nhentai.net"
 
 export const NHentaiInfo: SourceInfo = {
   version: "2.2.2",
@@ -37,19 +35,6 @@ export class NHentai extends Source {
     requestsPerSecond: 4,
     requestTimeout: 15000,
   })
-
-  convertLanguageToCode(language: string): LanguageCode {
-    switch (language.toLowerCase()) {
-      case "english":
-        return LanguageCode.ENGLISH
-      case "japanese":
-        return LanguageCode.JAPANESE
-      case "chinese":
-        return LanguageCode.CHINEESE
-      default:
-        return LanguageCode.UNKNOWN
-    }
-  }
 
   // Makes my life easy... ＼(≧▽≦)／
   async getResponse(mangaId: string, methodName: string): Promise<Response> {
@@ -130,20 +115,29 @@ export class NHentai extends Source {
     json.tags.forEach((tag) => {
       switch (tag.type) {
         case "artist":
-          return artist.push(capitalize(tag.name))
+          return artist.push(new Helper().capitalize(tag.name))
         case "category":
           return categories.push(
-            createTag({ id: tag.id.toString(), label: capitalize(tag.name) })
+            createTag({
+              id: tag.id.toString(),
+              label: new Helper().capitalize(tag.name),
+            })
           )
         case "character":
           return characters.push(
-            createTag({ id: tag.id.toString(), label: capitalize(tag.name) })
+            createTag({
+              id: tag.id.toString(),
+              label: new Helper().capitalize(tag.name),
+            })
           )
         case "language":
           return
         default:
           return tags.push(
-            createTag({ id: tag.id.toString(), label: capitalize(tag.name) })
+            createTag({
+              id: tag.id.toString(),
+              label: new Helper().capitalize(tag.name),
+            })
           )
       }
     })
@@ -177,10 +171,7 @@ export class NHentai extends Source {
     return createManga({
       id: json.id.toString(),
       titles: [json.title.pretty, json.title.english, json.title.japanese],
-      image:
-        "https://t.nhentai.net/galleries/" +
-        json.media_id +
-        `/1t.${TYPE(json.images.thumbnail.t)}`,
+      image: new Helper().getImageURLs(true, json.images, json.media_id)[0],
       rating: 0,
       status: 1,
       artist: artist.join(", "),
@@ -196,7 +187,7 @@ export class NHentai extends Source {
     let language = ""
     json.tags.forEach((tag) => {
       if (tag.type === "language" && tag.id !== 17249)
-        return (language += capitalize(tag.name))
+        return (language += new Helper().capitalize(tag.name))
       // Tag id 17249 is "Translated" tag and it belongs to "language" type.
       else return
     })
@@ -208,7 +199,7 @@ export class NHentai extends Source {
         mangaId: json.id.toString(),
         chapNum: 1, // No chapter clarification ┐('～`;)┌
         group: json.scanlator ? json.scanlator : undefined,
-        langCode: this.convertLanguageToCode(language),
+        langCode: new Helper().convertLanguageToCode(language),
         time: new Date(json.upload_date * 1000),
       }),
     ]
@@ -226,7 +217,7 @@ export class NHentai extends Source {
     return createChapterDetails({
       id: json.media_id,
       mangaId: json.id.toString(),
-      pages: PAGES(json.images, json.media_id),
+      pages: new Helper().getImageURLs(false, json.images, json.media_id),
       longStrip: false,
     })
   }
@@ -257,12 +248,12 @@ export class NHentai extends Source {
 
     // If the query title is a number, returns the result with that number as it's id.
     if (!isNaN(parseInt(title))) {
-      const response = await this.getResponse(title, methodName)
+      const json = await this.getResponse(title, methodName)
 
       let language = ""
-      response.tags.forEach((tag) => {
+      json.tags.forEach((tag) => {
         if (tag.type === "language" && tag.id !== 17249)
-          return (language += capitalize(tag.name))
+          return (language += new Helper().capitalize(tag.name))
         // Tag id 17249 is "Translated" tag and it belongs to "language" type.
         else return
       })
@@ -270,12 +261,13 @@ export class NHentai extends Source {
       return createPagedResults({
         results: [
           createMangaTile({
-            id: response.id.toString(),
-            title: createIconText({ text: response.title.pretty }),
-            image:
-              "https://t.nhentai.net/galleries/" +
-              response.media_id +
-              `/1t.${TYPE(response.images.thumbnail.t)}`,
+            id: json.id.toString(),
+            title: createIconText({ text: json.title.pretty }),
+            image: new Helper().getImageURLs(
+              true,
+              json.images,
+              json.media_id
+            )[0],
             subtitleText: createIconText({ text: language }),
           }),
         ],
@@ -294,7 +286,7 @@ export class NHentai extends Source {
       let language = ""
       result.tags.forEach((tag) => {
         if (tag.type === "language" && tag.id !== 17249)
-          return (language += capitalize(tag.name))
+          return (language += new Helper().capitalize(tag.name))
         // Tag id 17249 is "Translated" tag and it belongs to "language" type.
         else return
       })
@@ -302,10 +294,11 @@ export class NHentai extends Source {
       return createMangaTile({
         id: result.id.toString(),
         title: createIconText({ text: result.title.pretty }),
-        image:
-          "https://t.nhentai.net/galleries/" +
-          result.media_id +
-          `/1t.${TYPE(result.images.thumbnail.t)}`, // Type checking problem... 	(--_--)
+        image: new Helper().getImageURLs(
+          true,
+          result.images,
+          result.media_id
+        )[0], // Type checking problem... 	(--_--)
         subtitleText: createIconText({ text: language }),
       })
     })
@@ -355,7 +348,7 @@ export class NHentai extends Source {
       let language = ""
       result.tags.forEach((tag) => {
         if (tag.type === "language" && tag.id !== 17249)
-          return (language += capitalize(tag.name))
+          return (language += new Helper().capitalize(tag.name))
         // Tag id 17249 is "Translated" tag and it belongs to "language" type.
         else return
       })
@@ -363,10 +356,11 @@ export class NHentai extends Source {
       return createMangaTile({
         id: result.id.toString(),
         title: createIconText({ text: result.title.pretty }),
-        image:
-          "https://t.nhentai.net/galleries/" +
-          result.media_id +
-          `/1t.${TYPE(result.images.thumbnail.t)}`,
+        image: new Helper().getImageURLs(
+          true,
+          result.images,
+          result.media_id
+        )[0],
         subtitleText: createIconText({ text: language }),
       })
     })
@@ -377,7 +371,7 @@ export class NHentai extends Source {
       let language = ""
       result.tags.forEach((tag) => {
         if (tag.type === "language" && tag.id !== 17249)
-          return (language += capitalize(tag.name))
+          return (language += new Helper().capitalize(tag.name))
         // Tag id 17249 is "Translated" tag and it belongs to "language" type.
         else return
       })
@@ -385,10 +379,11 @@ export class NHentai extends Source {
       return createMangaTile({
         id: result.id.toString(),
         title: createIconText({ text: result.title.pretty }),
-        image:
-          "https://t.nhentai.net/galleries/" +
-          result.media_id +
-          `/1t.${TYPE(result.images.thumbnail.t)}`,
+        image: new Helper().getImageURLs(
+          true,
+          result.images,
+          result.media_id
+        )[0],
         subtitleText: createIconText({ text: language }),
       })
     })
@@ -427,7 +422,7 @@ export class NHentai extends Source {
       let language = ""
       result.tags.forEach((tag) => {
         if (tag.type === "language" && tag.id !== 17249)
-          return (language += capitalize(tag.name))
+          return (language += new Helper().capitalize(tag.name))
         // Tag id 17249 is "Translated" tag and it belongs to "language" type.
         else return
       })
@@ -435,10 +430,11 @@ export class NHentai extends Source {
       return createMangaTile({
         id: result.id.toString(),
         title: createIconText({ text: result.title.pretty }),
-        image:
-          "https://t.nhentai.net/galleries/" +
-          result.media_id +
-          `/1t.${TYPE(result.images.thumbnail.t)}`, // Type checking problem... 	(--_--)
+        image: new Helper().getImageURLs(
+          true,
+          result.images,
+          result.media_id
+        )[0], // Type checking problem... 	(--_--)
         subtitleText: createIconText({ text: language }),
       })
     })
